@@ -808,11 +808,11 @@ class _RoadmapSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      'Supabase auth, database, storage and realtime updates',
-      'Real payment authorization and refunds',
-      'Courier dispatch and delivery tracking',
-      'Farmer verification and admin tools',
-      'Responsive web dashboard and public marketing site',
+      'Start farmer-first with a simple market stand farmers can share anywhere',
+      'Onboard nearby customers into trusted farm pages and repeat ordering',
+      'Build a local food ecosystem where demand, stock and orders stay visible',
+      'Grow pickup and courier flows into a FreshNearby supply chain',
+      'Scale region by region with stronger farm identity, reviews and insights',
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -822,6 +822,14 @@ class _RoadmapSection extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.w900,
             color: const Color(0xFF173F2A),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'From farmer-focused selling tools to a local supply chain customers can trust.',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: const Color(0xFF526054),
+            height: 1.45,
           ),
         ),
         const SizedBox(height: 16),

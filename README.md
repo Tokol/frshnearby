@@ -57,7 +57,7 @@ The root route is a polished landing experience before the app:
 - For customers: Discovery, cart, order tracking, reviews.
 - Why it matters: Local food, producer visibility, less friction.
 - Prototype section: Link into the working Flutter demo.
-- Roadmap: Supabase, real payments, courier integration, verification, analytics.
+- Roadmap: farmer-first market pages, customer onboarding, local trust, logistics, and regional supply chain growth.
 
 ## Tech Stack
 
@@ -69,11 +69,11 @@ The root route is a polished landing experience before the app:
 - Shared preferences for local prototype settings
 - Mock repositories for current prototype data
 
-Planned backend direction:
+Planned product direction:
 
-- Supabase for authentication, database, storage, and realtime updates.
-- Payment authorization flow integration.
-- Courier service integration.
+- Farmer-first tools that feel like a simple digital market stand.
+- Customer onboarding around trusted farms, repeat orders, and transparent status.
+- A local supply chain that connects demand, stock, pickup, courier delivery, and reviews.
 
 ## Getting Started
 
@@ -195,15 +195,12 @@ This project is not production-ready yet. Current limitations:
 
 ## Roadmap
 
-- Connect Supabase authentication and database.
-- Add realtime stock and order updates.
-- Add Supabase storage for farm, cover, and product images.
-- Replace mock payment authorization with real payment provider integration.
-- Add courier partner dispatch and tracking.
-- Add farmer verification/admin dashboard.
-- Expand the public website with more product storytelling and screenshots.
-- Improve desktop/web responsive layouts.
-- Add production analytics and exportable sales reports.
+- Start farmer-first with a simple market stand farmers can share anywhere.
+- Onboard nearby customers into trusted farm pages and repeat ordering.
+- Build a local food ecosystem where demand, stock and orders stay visible.
+- Grow pickup and courier flows into a FreshNearby supply chain.
+- Scale region by region with stronger farm identity, reviews and insights.
+- Add deeper sales reporting once real farmer usage creates meaningful data.
 
 ## Status
 
