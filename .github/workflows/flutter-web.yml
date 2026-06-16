@@ -35,7 +35,7 @@ jobs:
         run: flutter gen-l10n
 
       - name: Build web
-        run: flutter build web --release --base-href /frshnearby/
+        run: flutter build web --release --base-href /
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
