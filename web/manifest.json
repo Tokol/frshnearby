@@ -1,11 +1,11 @@
 {
-    "name": "freshfarm",
-    "short_name": "freshfarm",
+    "name": "FreshNearby",
+    "short_name": "FreshNearby",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FBFCF6",
+    "theme_color": "#2F6B45",
+    "description": "FreshNearby connects local farmers, producers, and nearby customers.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
