@@ -20,17 +20,8 @@ class MarketingHomeScreen extends StatelessWidget {
               backgroundColor: const Color(0xEEFBFCF6),
               title: const _BrandMark(),
               actions: [
-                _HeaderLink(
-                  label: 'Prototype',
-                  onTap: () => context.go(AppRoutes.prototype),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: FilledButton(
-                    onPressed: () => context.go(AppRoutes.prototype),
-                    child: const Text('Open prototype'),
-                  ),
+                _HeaderActions(
+                  onOpenPrototype: () => context.go(AppRoutes.prototype),
                 ),
               ],
             ),
@@ -84,6 +75,7 @@ class _BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 380;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -100,25 +92,69 @@ class _BrandMark extends StatelessWidget {
           ),
           child: const Icon(Icons.eco_rounded, color: Colors.white, size: 19),
         ),
-        const SizedBox(width: 10),
-        const Text(
-          'FreshNearby',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.4),
-        ),
+        if (!compact) ...[
+          const SizedBox(width: 10),
+          const Flexible(
+            child: Text(
+              'FreshNearby',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.4,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
 }
 
-class _HeaderLink extends StatelessWidget {
-  const _HeaderLink({required this.label, required this.onTap});
+class _HeaderActions extends StatelessWidget {
+  const _HeaderActions({required this.onOpenPrototype});
 
-  final String label;
-  final VoidCallback onTap;
+  final VoidCallback onOpenPrototype;
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(onPressed: onTap, child: Text(label));
+    final width = MediaQuery.sizeOf(context).width;
+    if (width < 420) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: IconButton.filledTonal(
+          tooltip: 'Open prototype',
+          onPressed: onOpenPrototype,
+          icon: const Icon(Icons.play_arrow_rounded),
+        ),
+      );
+    }
+    if (width < 640) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: FilledButton(
+          onPressed: onOpenPrototype,
+          child: const Text('Prototype'),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(right: 16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: onOpenPrototype,
+            child: const Text('Prototype'),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: onOpenPrototype,
+            child: const Text('Open prototype'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -129,7 +165,9 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final narrow = MediaQuery.sizeOf(context).width < 820;
+    final width = MediaQuery.sizeOf(context).width;
+    final narrow = width < 820;
+    final veryNarrow = width < 460;
     final copy = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -137,12 +175,16 @@ class _HeroSection extends StatelessWidget {
         const SizedBox(height: 18),
         Text(
           'Fresh food, directly from nearby producers.',
-          style: theme.textTheme.displayMedium?.copyWith(
-            fontWeight: FontWeight.w900,
-            height: 0.96,
-            letterSpacing: -2.2,
-            color: const Color(0xFF173F2A),
-          ),
+          style:
+              (veryNarrow
+                      ? theme.textTheme.headlineLarge
+                      : theme.textTheme.displayMedium)
+                  ?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 1.02,
+                    letterSpacing: veryNarrow ? -1.0 : -2.2,
+                    color: const Color(0xFF173F2A),
+                  ),
         ),
         const SizedBox(height: 18),
         Text(
@@ -165,7 +207,7 @@ class _HeroSection extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => context.go(AppRoutes.customerHome),
               icon: const Icon(Icons.shopping_bag_outlined),
-              label: const Text('Customer demo'),
+              label: Text(veryNarrow ? 'Customer' : 'Customer demo'),
             ),
           ],
         ),
@@ -194,6 +236,7 @@ class _HeroVisual extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final narrow = MediaQuery.sizeOf(context).width < 520;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -213,7 +256,7 @@ class _HeroVisual extends StatelessWidget {
           children: [
             Image.asset(
               'assets/images/home/hero_market.png',
-              height: 430,
+              height: narrow ? 360 : 430,
               width: double.infinity,
               fit: BoxFit.cover,
             ),
@@ -233,16 +276,16 @@ class _HeroVisual extends StatelessWidget {
               ),
             ),
             Positioned(
-              left: 22,
-              right: 22,
-              bottom: 22,
+              left: narrow ? 14 : 22,
+              right: narrow ? 14 : 22,
+              bottom: narrow ? 14 : 22,
               child: Container(
-                padding: const EdgeInsets.all(18),
+                padding: EdgeInsets.all(narrow ? 14 : 18),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(24),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -252,16 +295,32 @@ class _HeroVisual extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    SizedBox(height: 6),
-                    Text('New potatoes, honey, carrots and more.'),
-                    SizedBox(height: 14),
-                    Row(
-                      children: [
-                        _MiniMetric(value: '24 kg', label: 'live stock'),
-                        SizedBox(width: 10),
-                        _MiniMetric(value: '4.9', label: 'rating'),
-                      ],
-                    ),
+                    const SizedBox(height: 6),
+                    const Text('New potatoes, honey, carrots and more.'),
+                    const SizedBox(height: 14),
+                    if (narrow)
+                      const Column(
+                        children: [
+                          _MiniMetric(value: '24 kg', label: 'live stock'),
+                          SizedBox(height: 8),
+                          _MiniMetric(value: '4.9', label: 'rating'),
+                        ],
+                      )
+                    else
+                      const Row(
+                        children: [
+                          Expanded(
+                            child: _MiniMetric(
+                              value: '24 kg',
+                              label: 'live stock',
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: _MiniMetric(value: '4.9', label: 'rating'),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -281,20 +340,19 @@ class _MiniMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEAF3E7),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF3E7),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ],
       ),
     );
   }
@@ -767,23 +825,55 @@ class _RoadmapSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            for (final item in items)
-              Chip(
-                avatar: const Icon(Icons.check_circle_outline, size: 18),
-                label: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Text(item),
-                ),
-                backgroundColor: Colors.white,
-                side: const BorderSide(color: Color(0xFFE1E9DE)),
-              ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow = constraints.maxWidth < 620;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final item in items)
+                  SizedBox(
+                    width: narrow
+                        ? constraints.maxWidth
+                        : (constraints.maxWidth - 12) / 2,
+                    child: _RoadmapItem(item),
+                  ),
+              ],
+            );
+          },
         ),
       ],
+    );
+  }
+}
+
+class _RoadmapItem extends StatelessWidget {
+  const _RoadmapItem(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE1E9DE)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.check_circle_outline,
+            size: 19,
+            color: Color(0xFF2F6B45),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text)),
+        ],
+      ),
     );
   }
 }
@@ -793,14 +883,30 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    final narrow = MediaQuery.sizeOf(context).width < 560;
+    return Column(
       children: [
-        Divider(),
-        SizedBox(height: 18),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [_BrandMark(), Text('Prototype for local food ordering.')],
-        ),
+        const Divider(),
+        const SizedBox(height: 18),
+        if (narrow)
+          const Column(
+            children: [
+              _BrandMark(),
+              SizedBox(height: 10),
+              Text(
+                'Prototype for local food ordering.',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          )
+        else
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _BrandMark(),
+              Text('Prototype for local food ordering.'),
+            ],
+          ),
       ],
     );
   }
