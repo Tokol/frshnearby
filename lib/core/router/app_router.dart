@@ -30,6 +30,7 @@ import '../../features/farmer_application/presentation/farmer_rejected_screen.da
 import '../../features/listings/presentation/create_listing_screen.dart';
 import '../../features/listings/presentation/edit_listing_screen.dart';
 import '../../features/listings/presentation/listing_preview_screen.dart';
+import '../../features/marketing/presentation/marketing_home_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shared/presentation/app_shell.dart';
 import '../../features/splash/presentation/splash_screen.dart';
@@ -45,9 +46,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
       final isAuthRoute =
           location == AppRoutes.login || location == AppRoutes.register;
+      final isPublicRoute = location == AppRoutes.home;
       final isFarmerRoute = location.startsWith('/farmer/');
       final isApplicationRoute = location.startsWith('/farmer-application');
       final farmerStatus = authState.user?.farmerProfile?.status;
+
+      if (isPublicRoute) {
+        return null;
+      }
 
       if (authState.isRestoring || locationState.isInitializing) {
         // Preserve explicit deep links while session and location state load.
@@ -82,6 +88,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (context, state) => const MarketingHomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.prototype,
+        redirect: (context, state) => AppRoutes.farmerDashboard,
+      ),
       GoRoute(
         path: AppRoutes.splash,
         builder: (context, state) => const SplashScreen(),
@@ -281,7 +295,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 String _browserInitialLocation() {
   final fragment = Uri.base.fragment;
   if (fragment.startsWith('/')) return fragment;
-  return AppRoutes.splash;
+  return AppRoutes.home;
 }
 
 Page<dynamic> Function(BuildContext, GoRouterState) _pageBuilder(Widget child) {

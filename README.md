@@ -2,7 +2,7 @@
 
 FreshNearby is a modern local food marketplace prototype that connects nearby customers with farmers and small producers. Farmers can list available products, manage stock, accept order requests, track fulfillment, and review sales insights. Customers can discover farms, follow producers, request products, track order progress, and leave optional reviews after delivery.
 
-This repository currently contains the working Flutter prototype. A full public website can sit in front of it later with sections for who we are, what we do, farmers, customers, and a dedicated prototype entry point.
+This repository contains a public FreshNearby website and the working Flutter prototype. The website introduces the idea, explains the farmer/customer value, and links into the prototype section.
 
 ## Prototype Scope
 
@@ -46,9 +46,9 @@ For customers:
 - Track order milestones.
 - Leave an optional review after delivery.
 
-## Planned Website Structure
+## Website Structure
 
-The public website can be added as a polished landing experience before the app:
+The root route is a polished landing experience before the app:
 
 - Hero: Fresh food, directly from local producers.
 - Who we are: A short story about connecting communities and farms.
@@ -98,10 +98,37 @@ http://127.0.0.1:5173
 Useful prototype routes:
 
 ```text
+/#/
+/#/prototype
 /#/farmer/dashboard
 /#/customer/home
 /#/customer/farmers/farmer-1
 /#/customer/deals
+```
+
+The public website lives at `/#/`. The prototype entry point is `/#/prototype`.
+
+## GitHub Pages
+
+This repository includes a GitHub Actions workflow:
+
+```text
+.github/workflows/flutter-web.yml
+```
+
+On every push to `main`, it:
+
+- checks out the repository
+- installs Flutter
+- runs `flutter pub get`
+- runs `flutter gen-l10n`
+- builds Flutter web with `--base-href /frshnearby/`
+- deploys `build/web` to GitHub Pages
+
+In GitHub, enable Pages with:
+
+```text
+Settings -> Pages -> Source -> GitHub Actions
 ```
 
 ## Localization
@@ -174,7 +201,7 @@ This project is not production-ready yet. Current limitations:
 - Replace mock payment authorization with real payment provider integration.
 - Add courier partner dispatch and tracking.
 - Add farmer verification/admin dashboard.
-- Add public marketing website with a prototype section.
+- Expand the public website with more product storytelling and screenshots.
 - Improve desktop/web responsive layouts.
 - Add production analytics and exportable sales reports.
 
