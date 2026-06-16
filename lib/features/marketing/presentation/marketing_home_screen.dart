@@ -465,7 +465,7 @@ class _ValueGrid extends StatelessWidget {
           );
         }
         return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (var i = 0; i < cards.length; i++) ...[
               if (i > 0) const SizedBox(width: 14),
@@ -590,7 +590,7 @@ class _HowItWorksSection extends StatelessWidget {
                 )
               else
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     for (var i = 0; i < steps.length; i++) ...[
                       if (i > 0) const SizedBox(width: 12),
