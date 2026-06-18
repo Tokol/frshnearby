@@ -28,6 +28,9 @@ abstract class DealRepository {
     required String unit,
     required double unitPrice,
     required String note,
+    FulfillmentMethod fulfillmentMethod = FulfillmentMethod.farmPickup,
+    double deliveryFee = 0,
+    double? deliveryDistanceKm,
   });
 
   Future<List<ChatThread>> getThreads(String customerId);
@@ -158,6 +161,9 @@ class MockDealRepository implements DealRepository {
     required String unit,
     required double unitPrice,
     required String note,
+    FulfillmentMethod fulfillmentMethod = FulfillmentMethod.farmPickup,
+    double deliveryFee = 0,
+    double? deliveryDistanceKm,
   }) async {
     final dealId = 'feed-deal-${_deals.length + 1}';
     final threadId = 'feed-thread-${_threads.length + 1}';
@@ -185,6 +191,9 @@ class MockDealRepository implements DealRepository {
       status: DealStatus.confirmed,
       createdAt: now,
       farmName: farmName,
+      fulfillmentMethod: fulfillmentMethod,
+      deliveryFee: deliveryFee,
+      deliveryDistanceKm: deliveryDistanceKm,
       statusUpdates: [
         DealStatusUpdate(status: DealStatus.negotiating, timestamp: now),
         DealStatusUpdate(

@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
+import '../../auth/presentation/auth_controller.dart';
 import '../../deals/domain/deal.dart';
 import '../../deals/presentation/deal_controller.dart';
+import '../../social_feed/domain/feed_post.dart';
+import '../../social_feed/presentation/social_feed_controller.dart';
 
 class FarmerDealsScreen extends ConsumerStatefulWidget {
   const FarmerDealsScreen({super.key});
@@ -22,6 +25,9 @@ class _FarmerDealsScreenState extends ConsumerState<FarmerDealsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final ordersAsync = ref.watch(farmerDealsProvider);
+    final farmerId =
+        ref.watch(authControllerProvider).user?.farmerProfile?.id ?? 'farmer-1';
+    final feedState = ref.watch(socialFeedControllerProvider);
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -62,6 +68,10 @@ class _FarmerDealsScreenState extends ConsumerState<FarmerDealsScreen> {
               );
 
           final productGroups = _ProductOrderGroup.fromOrders(filtered);
+          final pendingOffers = _PendingFeedOffer.fromPosts(
+            feedState.posts,
+            farmerId,
+          );
 
           return Center(
             child: ConstrainedBox(
@@ -78,22 +88,26 @@ class _FarmerDealsScreenState extends ConsumerState<FarmerDealsScreen> {
                                 group.first.status == DealStatus.negotiating,
                           )
                           .length,
+                      pendingOfferCount: pendingOffers.length,
                       onSelected: (index) {
                         setState(() => _selectedIndex = index);
                       },
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                    child: _OrderBookViewToggle(
-                      selectedView: _selectedView,
-                      onSelected: (view) {
-                        setState(() => _selectedView = view);
-                      },
+                  if (_selectedIndex != 3)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      child: _OrderBookViewToggle(
+                        selectedView: _selectedView,
+                        onSelected: (view) {
+                          setState(() => _selectedView = view);
+                        },
+                      ),
                     ),
-                  ),
                   Expanded(
-                    child: filtered.isEmpty
+                    child: _selectedIndex == 3
+                        ? _PendingFeedOffersList(offers: pendingOffers)
+                        : filtered.isEmpty
                         ? const _EmptyOrderBook()
                         : _selectedView == _OrderBookView.orders
                         ? ListView.separated(
@@ -174,11 +188,13 @@ class _OrderTabs extends StatelessWidget {
   const _OrderTabs({
     required this.selectedIndex,
     required this.newCount,
+    required this.pendingOfferCount,
     required this.onSelected,
   });
 
   final int selectedIndex;
   final int newCount;
+  final int pendingOfferCount;
   final ValueChanged<int> onSelected;
 
   @override
@@ -199,7 +215,172 @@ class _OrderTabs extends StatelessWidget {
           ),
         ),
         ButtonSegment(value: 2, label: Text(l10n.historyLabel)),
+        ButtonSegment(
+          value: 3,
+          label: Text(
+            pendingOfferCount > 0
+                ? 'Pending offers  $pendingOfferCount'
+                : 'Pending offers',
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _PendingFeedOffer {
+  const _PendingFeedOffer({required this.post, required this.offer});
+
+  final FeedPost post;
+  final FeedOffer offer;
+
+  static List<_PendingFeedOffer> fromPosts(
+    List<FeedPost> posts,
+    String farmerId,
+  ) {
+    final result = <_PendingFeedOffer>[];
+    for (final post in posts) {
+      for (final offer in post.offers) {
+        if (offer.authorId == farmerId &&
+            offer.status == FeedOfferStatus.pending) {
+          result.add(_PendingFeedOffer(post: post, offer: offer));
+        }
+      }
+    }
+    result.sort((a, b) => b.offer.createdAt.compareTo(a.offer.createdAt));
+    return result;
+  }
+}
+
+class _PendingFeedOffersList extends ConsumerWidget {
+  const _PendingFeedOffersList({required this.offers});
+
+  final List<_PendingFeedOffer> offers;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (offers.isEmpty) {
+      return const _EmptyPendingOffers();
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+      itemCount: offers.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final item = offers[index];
+        return _PendingFeedOfferCard(
+          item: item,
+          onOpenWall: () =>
+              context.push('${AppRoutes.farmerCommunity}?post=${item.post.id}'),
+          onCancel: () => ref
+              .read(socialFeedControllerProvider.notifier)
+              .cancelOffer(item.post.id, item.offer.id),
+        );
+      },
+    );
+  }
+}
+
+class _PendingFeedOfferCard extends StatelessWidget {
+  const _PendingFeedOfferCard({
+    required this.item,
+    required this.onOpenWall,
+    required this.onCancel,
+  });
+
+  final _PendingFeedOffer item;
+  final VoidCallback onOpenWall;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final offer = item.offer;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.schedule_outlined),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Waiting for ${offer.targetCustomerName ?? 'customer'}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const Chip(
+                visualDensity: VisualDensity.compact,
+                label: Text('Pending'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            item.post.title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${offer.quantity} · €${offer.price.toStringAsFixed(2)} · ${offer.dateLabel}',
+          ),
+          if (offer.note.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(offer.note),
+          ],
+          if (offer.sourceCommentText != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Customer asked: ${offer.sourceCommentText}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: onOpenWall,
+                icon: const Icon(Icons.open_in_new_rounded),
+                label: const Text('Open wall'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onCancel,
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Cancel offer'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyPendingOffers extends StatelessWidget {
+  const _EmptyPendingOffers();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(28),
+        child: Text('No pending offers waiting for customers.'),
+      ),
     );
   }
 }

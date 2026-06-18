@@ -8,15 +8,27 @@ final socialFeedControllerProvider =
     );
 
 class SocialFeedState {
-  const SocialFeedState({required this.posts, required this.orders});
+  const SocialFeedState({
+    required this.posts,
+    required this.orders,
+    List<FeedNotification>? notifications,
+  }) : _notifications = notifications;
 
   final List<FeedPost> posts;
   final List<FeedOrder> orders;
+  final List<FeedNotification>? _notifications;
+  List<FeedNotification> get notifications =>
+      _notifications ?? const <FeedNotification>[];
 
-  SocialFeedState copyWith({List<FeedPost>? posts, List<FeedOrder>? orders}) {
+  SocialFeedState copyWith({
+    List<FeedPost>? posts,
+    List<FeedOrder>? orders,
+    List<FeedNotification>? notifications,
+  }) {
     return SocialFeedState(
       posts: posts ?? this.posts,
       orders: orders ?? this.orders,
+      notifications: notifications ?? this.notifications,
     );
   }
 }
@@ -66,22 +78,83 @@ class SocialFeedController extends StateNotifier<SocialFeedState> {
     if (text.trim().isEmpty) return;
     final post = state.posts.firstWhere((post) => post.id == postId);
     if (!post.areCommentsEnabled || post.isOffersFinished) return;
-    _updatePost(
+    final now = DateTime.now();
+    final comment = FeedComment(
+      id: 'comment-${now.microsecondsSinceEpoch}',
+      authorName: authorName,
+      authorId: authorId,
+      actorType: actorType,
+      text: text.trim(),
+      createdAt: now,
+      parentCommentId: parentCommentId,
+    );
+    final posts = _updatedPosts(
       postId,
-      (post) => post.copyWith(
-        comments: [
-          ...post.comments,
-          FeedComment(
-            id: 'comment-${DateTime.now().microsecondsSinceEpoch}',
-            authorName: authorName,
-            authorId: authorId,
-            actorType: actorType,
-            text: text.trim(),
-            createdAt: DateTime.now(),
-            parentCommentId: parentCommentId,
-          ),
-        ],
-      ),
+      (post) => post.copyWith(comments: [...post.comments, comment]),
+    );
+    final notifications = [
+      if (actorType == FeedActorType.consumer && post.authorId != authorId)
+        FeedNotification(
+          id: 'notification-${now.microsecondsSinceEpoch}',
+          farmerId: post.authorId,
+          postId: post.id,
+          commentId: comment.id,
+          actorName: authorName,
+          postTitle: post.title,
+          text: comment.text,
+          createdAt: now,
+        ),
+      ...state.notifications,
+    ];
+    state = state.copyWith(posts: posts, notifications: notifications);
+  }
+
+  int unreadCountForFarmer(String farmerId) {
+    return state.notifications
+        .where((item) => item.farmerId == farmerId && !item.seen)
+        .length;
+  }
+
+  List<FeedNotification> notificationsForFarmer(String farmerId) {
+    return state.notifications
+        .where((item) => item.farmerId == farmerId)
+        .toList();
+  }
+
+  void markNotificationSeen(String notificationId) {
+    state = state.copyWith(
+      notifications: state.notifications
+          .map(
+            (item) =>
+                item.id == notificationId ? item.copyWith(seen: true) : item,
+          )
+          .toList(),
+    );
+  }
+
+  void markAllNotificationsSeen(String farmerId) {
+    state = state.copyWith(
+      notifications: state.notifications
+          .map(
+            (item) =>
+                item.farmerId == farmerId ? item.copyWith(seen: true) : item,
+          )
+          .toList(),
+    );
+  }
+
+  void markPostNotificationsSeen({
+    required String farmerId,
+    required String postId,
+  }) {
+    state = state.copyWith(
+      notifications: state.notifications
+          .map(
+            (item) => item.farmerId == farmerId && item.postId == postId
+                ? item.copyWith(seen: true)
+                : item,
+          )
+          .toList(),
     );
   }
 
@@ -165,6 +238,10 @@ class SocialFeedController extends StateNotifier<SocialFeedState> {
     _setOfferStatus(postId, offerId, FeedOfferStatus.declined);
   }
 
+  void cancelOffer(String postId, String offerId) {
+    _setOfferStatus(postId, offerId, FeedOfferStatus.cancelled);
+  }
+
   void setOffersFinished(String postId, bool value) {
     _updatePost(
       postId,
@@ -233,17 +310,21 @@ class SocialFeedController extends StateNotifier<SocialFeedState> {
   }
 
   void _updatePost(String postId, FeedPost Function(FeedPost post) update) {
-    state = state.copyWith(
-      posts:
-          state.posts
-              .map((post) => post.id == postId ? update(post) : post)
-              .toList()
-            ..sort(
-              (left, right) => (right.bumpedAt ?? right.createdAt).compareTo(
-                left.bumpedAt ?? left.createdAt,
-              ),
-            ),
-    );
+    state = state.copyWith(posts: _updatedPosts(postId, update));
+  }
+
+  List<FeedPost> _updatedPosts(
+    String postId,
+    FeedPost Function(FeedPost post) update,
+  ) {
+    return state.posts
+        .map((post) => post.id == postId ? update(post) : post)
+        .toList()
+      ..sort(
+        (left, right) => (right.bumpedAt ?? right.createdAt).compareTo(
+          left.bumpedAt ?? left.createdAt,
+        ),
+      );
   }
 }
 

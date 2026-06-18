@@ -15,6 +15,8 @@ import '../../deals/presentation/deal_controller.dart';
 import '../../listings/domain/listing.dart';
 import '../../listings/presentation/listing_controller.dart';
 import '../../listings/presentation/listing_form_components.dart';
+import '../../social_feed/domain/feed_post.dart';
+import '../../social_feed/presentation/social_feed_controller.dart';
 
 class FarmerDashboardScreen extends ConsumerWidget {
   const FarmerDashboardScreen({super.key});
@@ -26,6 +28,23 @@ class FarmerDashboardScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final profile = ref.watch(authControllerProvider).user?.farmerProfile;
+    final farmerId = profile?.id ?? 'farmer-1';
+    final feedState = ref.watch(socialFeedControllerProvider);
+    final unreadWallNotifications = feedState.notifications
+        .where((item) => item.farmerId == farmerId && !item.seen)
+        .length;
+    final pendingFeedOfferCount = feedState.posts.fold<int>(
+      0,
+      (count, post) =>
+          count +
+          post.offers
+              .where(
+                (offer) =>
+                    offer.authorId == farmerId &&
+                    offer.status == FeedOfferStatus.pending,
+              )
+              .length,
+    );
     final listings = ref.watch(listingControllerProvider).listings;
     final orders = ref.watch(farmerDealsProvider).valueOrNull ?? const <Deal>[];
     final active = orders
@@ -93,7 +112,28 @@ class FarmerDashboardScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Farm wall',
             onPressed: () => context.go(AppRoutes.farmerCommunity),
-            icon: const Icon(Icons.post_add_outlined),
+            icon: Badge(
+              isLabelVisible: unreadWallNotifications > 0,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              label: Text('$unreadWallNotifications'),
+              child: const Icon(Icons.post_add_outlined),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Notifications',
+            onPressed: () => _showFarmWallNotifications(
+              context: context,
+              ref: ref,
+              farmerId: farmerId,
+            ),
+            icon: Badge(
+              isLabelVisible: unreadWallNotifications > 0,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              label: Text('$unreadWallNotifications'),
+              child: const Icon(Icons.notifications_none_rounded),
+            ),
           ),
           const SizedBox(width: 6),
         ],
@@ -114,6 +154,13 @@ class FarmerDashboardScreen extends ConsumerWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          if (pendingFeedOfferCount > 0) ...[
+            const SizedBox(height: 14),
+            _PendingOffersNotice(
+              count: pendingFeedOfferCount,
+              onTap: () => context.go(AppRoutes.farmerDeals),
+            ),
+          ],
           const SizedBox(height: 20),
           _FarmLinkCard(
             onPreview: () => context.push(
@@ -334,8 +381,283 @@ class FarmerDashboardScreen extends ConsumerWidget {
     );
   }
 
+  void _showFarmWallNotifications({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String farmerId,
+  }) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _FarmWallNotificationsScreen(farmerId: farmerId),
+      ),
+    );
+  }
+
   static String _formatQuantity(double value) {
     return value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
+  }
+}
+
+class _FarmWallNotificationsScreen extends ConsumerWidget {
+  const _FarmWallNotificationsScreen({required this.farmerId});
+
+  final String farmerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifications = ref
+        .watch(socialFeedControllerProvider)
+        .notifications
+        .where((item) => item.farmerId == farmerId)
+        .toList();
+    final unreadCount = notifications.where((item) => !item.seen).length;
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Close',
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close_rounded),
+        ),
+        title: const Text('Notifications'),
+        actions: [
+          TextButton(
+            onPressed: unreadCount == 0
+                ? null
+                : () => ref
+                      .read(socialFeedControllerProvider.notifier)
+                      .markAllNotificationsSeen(farmerId),
+            child: const Text('Mark all read'),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: notifications.isEmpty
+          ? const _EmptyFarmWallNotifications()
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 28),
+              itemCount: notifications.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                return _FarmWallNotificationTile(
+                  notification: notification,
+                  onTap: () {
+                    ref
+                        .read(socialFeedControllerProvider.notifier)
+                        .markNotificationSeen(notification.id);
+                    Navigator.pop(context);
+                    context.go(
+                      '${AppRoutes.farmerCommunity}?post=${notification.postId}&comment=${notification.commentId}',
+                    );
+                  },
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _EmptyFarmWallNotifications extends StatelessWidget {
+  const _EmptyFarmWallNotifications();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.notifications_none_rounded,
+              size: 54,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'No notifications yet',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Customer comments on your farm wall will appear here.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FarmWallNotificationTile extends StatelessWidget {
+  const _FarmWallNotificationTile({
+    required this.notification,
+    required this.onTap,
+  });
+
+  final FeedNotification notification;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final initial = notification.actorName.trim().isEmpty
+        ? '?'
+        : notification.actorName.trim().characters.first.toUpperCase();
+    return Material(
+      color: notification.seen
+          ? theme.colorScheme.surface
+          : theme.colorScheme.primaryContainer.withValues(alpha: 0.28),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: notification.seen
+                    ? theme.colorScheme.surfaceContainerHighest
+                    : theme.colorScheme.primary,
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    color: notification.seen
+                        ? theme.colorScheme.onSurfaceVariant
+                        : theme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: notification.actorName,
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                          const TextSpan(text: ' commented on '),
+                          TextSpan(
+                            text: notification.postTitle,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      notification.text,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _notificationAge(notification.createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: notification.seen
+                            ? theme.colorScheme.onSurfaceVariant
+                            : theme.colorScheme.primary,
+                        fontWeight: notification.seen
+                            ? FontWeight.w500
+                            : FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!notification.seen) ...[
+                const SizedBox(width: 10),
+                Container(
+                  width: 10,
+                  height: 10,
+                  margin: const EdgeInsets.only(top: 20),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _notificationAge(DateTime value) {
+  final difference = DateTime.now().difference(value);
+  if (difference.inMinutes < 1) return 'now';
+  if (difference.inHours < 1) return '${difference.inMinutes}m';
+  if (difference.inHours < 24) return '${difference.inHours}h';
+  return '${value.day}.${value.month}';
+}
+
+class _PendingOffersNotice extends StatelessWidget {
+  const _PendingOffersNotice({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.58),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: theme.colorScheme.tertiary,
+                child: Icon(
+                  Icons.handshake_outlined,
+                  color: theme.colorScheme.onTertiary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  count == 1
+                      ? '1 pending offer is waiting for a customer'
+                      : '$count pending offers are waiting for customers',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

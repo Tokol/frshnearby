@@ -58,18 +58,9 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
               );
             }
 
-            final justHarvested = items.take(3).toList();
-            final deals = items.reversed.take(3).toList();
-            final followedListings = <CustomerListing>[];
-            final addedFarmIds = <String>{};
-            for (final listing in items) {
-              final farmerId = listing.farmer.id;
-              if (followedFarmIds.contains(farmerId) &&
-                  addedFarmIds.add(farmerId)) {
-                followedListings.add(listing);
-              }
-            }
-
+            final followedProducts = items
+                .where((item) => followedFarmIds.contains(item.farmer.id))
+                .toList();
             return CustomScrollView(
               slivers: [
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -212,45 +203,42 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
                     ),
                   ),
                 ),
-                SliverToBoxAdapter(
-                  child: _FollowedFarmsSection(
-                    farms: followedListings,
-                    allListings: items,
-                    onTap: (listing) => context.go(
-                      AppRoutes.farmerPublicProfile(listing.farmer.id),
+                if (followedProducts.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _ListingRail(
+                      title: 'From farms you follow',
+                      listings: followedProducts,
+                      onSeeAll: () => context.go(AppRoutes.customerCommunity),
+                      onTap: (listing) => context.go(
+                        AppRoutes.customerListingDetail(listing.listing.id),
+                      ),
                     ),
                   ),
-                ),
                 SliverToBoxAdapter(
-                  child: _ListingRail(
-                    title: l10n.homeJustHarvestedTitle,
-                    listings: justHarvested,
-                    onSeeAll: () => context.go(AppRoutes.customerSearch),
-                    onTap: (listing) => context.go(
-                      AppRoutes.customerListingDetail(listing.listing.id),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _ListingRail(
-                    title: l10n.homeDealsTodayTitle,
-                    listings: deals,
-                    onSeeAll: () => context.go(AppRoutes.customerSearch),
-                    onTap: (listing) => context.go(
-                      AppRoutes.customerListingDetail(listing.listing.id),
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                    child: _HeroMarketCard(
-                      title: l10n.homeHeroTitle,
-                      subtitle: l10n.homeHeroSubtitle,
-                      buttonLabel: l10n.browseTodayPicks,
-                      onPressed: () => context.go(AppRoutes.customerSearch),
-                    ),
+                  child: _UpcomingNearYouSection(
+                    events: const [
+                      _UpcomingEvent(
+                        title: 'Saturday farm market',
+                        farmName: 'North Field Farm',
+                        timeLabel: 'Sat 10:00-14:00',
+                        locationLabel: 'Vaasa market square',
+                        icon: Icons.storefront_outlined,
+                      ),
+                      _UpcomingEvent(
+                        title: 'Strawberry picking weekend',
+                        farmName: 'Berry Hill Farm',
+                        timeLabel: 'Tomorrow',
+                        locationLabel: '7.4 km away',
+                        icon: Icons.event_available_outlined,
+                      ),
+                      _UpcomingEvent(
+                        title: 'Fresh bread pickup',
+                        farmName: 'North Bakery Farm',
+                        timeLabel: 'Today 17:00',
+                        locationLabel: 'Palosaari pickup',
+                        icon: Icons.bakery_dining_outlined,
+                      ),
+                    ],
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 112)),
@@ -544,78 +532,6 @@ class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
   }
 }
 
-class _HeroMarketCard extends StatelessWidget {
-  const _HeroMarketCard({
-    required this.title,
-    required this.subtitle,
-    required this.buttonLabel,
-    required this.onPressed,
-  });
-
-  final String title;
-  final String subtitle;
-  final String buttonLabel;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            _HomeImage(
-              assetPath: 'assets/images/home/hero_market.png',
-              fit: BoxFit.cover,
-            ),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.05),
-                    Colors.black.withValues(alpha: 0.58),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  FilledButton(onPressed: onPressed, child: Text(buttonLabel)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _HorizontalCategorySection extends StatefulWidget {
   const _HorizontalCategorySection({
     required this.categories,
@@ -824,148 +740,6 @@ class _ListingRail extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _FollowedFarmsSection extends StatelessWidget {
-  const _FollowedFarmsSection({
-    required this.farms,
-    required this.allListings,
-    required this.onTap,
-  });
-
-  final List<CustomerListing> farms;
-  final List<CustomerListing> allListings;
-  final ValueChanged<CustomerListing> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    if (farms.isEmpty) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionTitle(title: AppLocalizations.of(context).farmsYouFollowTitle),
-        SizedBox(
-          height: 218,
-          child: ListView.separated(
-            primary: false,
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsetsDirectional.only(start: 20, end: 80),
-            itemCount: farms.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
-            itemBuilder: (context, index) {
-              final listing = farms[index];
-              final products = allListings
-                  .where((item) => item.farmer.id == listing.farmer.id)
-                  .take(3)
-                  .map((item) => item.productName('en'))
-                  .join(' · ');
-              return _FollowedFarmCard(
-                listing: listing,
-                products: products,
-                onTap: () => onTap(listing),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FollowedFarmCard extends StatelessWidget {
-  const _FollowedFarmCard({
-    required this.listing,
-    required this.products,
-    required this.onTap,
-  });
-
-  final CustomerListing listing;
-  final String products;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final farmer = listing.farmer;
-    final theme = Theme.of(context);
-    return SizedBox(
-      width: 300,
-      child: Card(
-        margin: EdgeInsets.zero,
-        elevation: 0,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: theme.colorScheme.outlineVariant),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 96,
-                width: double.infinity,
-                child: AppImage(
-                  farmer.coverPhotoPlaceholder ??
-                      'assets/images/home/hero_market.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FarmAvatar(
-                        farmName: farmer.farmName,
-                        radius: 24,
-                        photo: farmer.profilePhotoPlaceholder,
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              farmer.farmName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              '${listing.distanceKm.toStringAsFixed(1)} km away',
-                              style: theme.textTheme.bodySmall,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              products,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall,
-                            ),
-                            const Spacer(),
-                            const Text(
-                              'View farm',
-                              style: TextStyle(fontWeight: FontWeight.w800),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(Icons.chevron_right_rounded),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1288,6 +1062,138 @@ class _HomeImage extends StatelessWidget {
           child: Icon(Icons.image_outlined, color: colorScheme.primary),
         );
       },
+    );
+  }
+}
+
+class _UpcomingEvent {
+  const _UpcomingEvent({
+    required this.title,
+    required this.farmName,
+    required this.timeLabel,
+    required this.locationLabel,
+    required this.icon,
+  });
+
+  final String title;
+  final String farmName;
+  final String timeLabel;
+  final String locationLabel;
+  final IconData icon;
+}
+
+class _UpcomingNearYouSection extends StatelessWidget {
+  const _UpcomingNearYouSection({required this.events});
+
+  final List<_UpcomingEvent> events;
+
+  @override
+  Widget build(BuildContext context) {
+    if (events.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle(title: 'Upcoming near you'),
+        SizedBox(
+          height: 172,
+          child: ListView.separated(
+            primary: false,
+            physics: const ClampingScrollPhysics(),
+            padding: const EdgeInsetsDirectional.only(start: 20, end: 80),
+            scrollDirection: Axis.horizontal,
+            itemCount: events.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              return _UpcomingEventCard(event: events[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UpcomingEventCard extends StatelessWidget {
+  const _UpcomingEventCard({required this.event});
+
+  final _UpcomingEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      width: 282,
+      child: Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: theme.colorScheme.secondaryContainer,
+                    child: Icon(
+                      event.icon,
+                      color: theme.colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                  const Spacer(),
+                  Chip(
+                    visualDensity: VisualDensity.compact,
+                    label: Text(event.timeLabel),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                event.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                event.farmName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  Icon(
+                    Icons.place_outlined,
+                    size: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      event.locationLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

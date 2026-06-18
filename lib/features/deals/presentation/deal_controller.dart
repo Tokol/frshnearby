@@ -122,6 +122,9 @@ class DealController extends StateNotifier<DealState> {
     required String unit,
     required double unitPrice,
     required String note,
+    FulfillmentMethod fulfillmentMethod = FulfillmentMethod.farmPickup,
+    double deliveryFee = 0,
+    double? deliveryDistanceKm,
   }) async {
     final customerId = _customerId;
     if (customerId == null) {
@@ -140,6 +143,9 @@ class DealController extends StateNotifier<DealState> {
           unit: unit,
           unitPrice: unitPrice,
           note: note,
+          fulfillmentMethod: fulfillmentMethod,
+          deliveryFee: deliveryFee,
+          deliveryDistanceKm: deliveryDistanceKm,
         );
     await loadDeals();
     _ref.invalidate(farmerDealsProvider);

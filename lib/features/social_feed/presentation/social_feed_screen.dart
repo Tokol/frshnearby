@@ -9,6 +9,9 @@ import '../../../core/widgets/farm_avatar.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../customer/presentation/payment_authorization_controller.dart';
 import '../../customer/presentation/followed_farms_controller.dart';
+import '../../customer_marketplace/domain/customer_listing.dart';
+import '../../customer_marketplace/presentation/customer_marketplace_controller.dart';
+import '../../deals/domain/deal.dart';
 import '../../deals/presentation/deal_controller.dart';
 import '../domain/feed_post.dart';
 import 'social_feed_controller.dart';
@@ -97,6 +100,8 @@ Future<void> acceptFeedOfferFromPost({
   required FeedPost post,
   required FeedOffer offer,
 }) async {
+  final fulfillment = await _showFeedFulfillmentOptions(context);
+  if (fulfillment == null || !context.mounted) return;
   final method = await _showFeedPaymentOptions(context);
   if (method == null || !context.mounted) return;
   final feedOrder = ref
@@ -117,7 +122,8 @@ Future<void> acceptFeedOfferFromPost({
         unit: quantity.unit,
         unitPrice: feedOrder.price / quantity.amount,
         note:
-            'Accepted feed offer. Pickup: ${feedOrder.dateLabel}. ${offer.note}',
+            'Accepted feed offer. ${fulfillment == FulfillmentMethod.farmPickup ? 'Pickup' : 'Delivery requested'}: ${feedOrder.dateLabel}. ${offer.note}',
+        fulfillmentMethod: fulfillment,
       );
   ref.read(paymentAuthorizationProvider.notifier).authorize(deal.id, method);
   if (!context.mounted) return;
@@ -125,6 +131,48 @@ Future<void> acceptFeedOfferFromPost({
     SnackBar(
       content: Text(
         'Accepted. ${paymentMethodLabel(method)} authorized and sent to farmer orders.',
+      ),
+    ),
+  );
+}
+
+Future<FulfillmentMethod?> _showFeedFulfillmentOptions(BuildContext context) {
+  return showModalBottomSheet<FulfillmentMethod>(
+    context: context,
+    showDragHandle: true,
+    builder: (context) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Choose fulfillment',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 8),
+            const Text('Delivery fee can be confirmed from distance later.'),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.storefront_outlined),
+              title: const Text('Farm pickup'),
+              subtitle: const Text('Use the pickup window from the farmer.'),
+              onTap: () => Navigator.pop(context, FulfillmentMethod.farmPickup),
+            ),
+            ListTile(
+              leading: const Icon(Icons.local_shipping_outlined),
+              title: const Text('Delivery'),
+              subtitle: const Text(
+                'Courier/delivery details are added to the order.',
+              ),
+              onTap: () =>
+                  Navigator.pop(context, FulfillmentMethod.courierDelivery),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -171,11 +219,15 @@ class SocialFeedScreen extends ConsumerStatefulWidget {
   const SocialFeedScreen({
     required this.viewerType,
     this.openComposer = false,
+    this.focusPostId,
+    this.focusCommentId,
     super.key,
   });
 
   final FeedActorType viewerType;
   final bool openComposer;
+  final String? focusPostId;
+  final String? focusCommentId;
 
   @override
   ConsumerState<SocialFeedScreen> createState() => _SocialFeedScreenState();
@@ -183,6 +235,7 @@ class SocialFeedScreen extends ConsumerStatefulWidget {
 
 class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
   bool _didOpenComposer = false;
+  String? _lastMarkedFocusPostId;
 
   @override
   void didChangeDependencies() {
@@ -205,88 +258,86 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
     final viewerName = _viewerName();
     final viewerPhoto = _viewerPhoto();
     final followedFarmIds = ref.watch(followedFarmsProvider);
-    final posts = isFarmer
+    var posts = isFarmer
         ? state.posts.where((post) => post.authorId == viewerId).toList()
         : state.posts
               .where((post) => followedFarmIds.contains(post.authorId))
               .toList();
+    if (isFarmer && widget.focusPostId != null) {
+      final focusPostId = widget.focusPostId!;
+      posts = [
+        ...posts.where((post) => post.id == focusPostId),
+        ...posts.where((post) => post.id != focusPostId),
+      ];
+      if (_lastMarkedFocusPostId != focusPostId) {
+        _lastMarkedFocusPostId = focusPostId;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ref
+              .read(socialFeedControllerProvider.notifier)
+              .markPostNotificationsSeen(
+                farmerId: viewerId,
+                postId: focusPostId,
+              );
+        });
+      }
+    }
+
+    if (!isFarmer) {
+      return DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Feed'),
+            bottom: const TabBar(
+              tabs: [
+                Tab(text: 'Posts'),
+                Tab(text: 'Following'),
+              ],
+            ),
+          ),
+          body: SafeArea(
+            child: TabBarView(
+              children: [
+                _FeedPostsView(
+                  posts: posts,
+                  viewerType: widget.viewerType,
+                  viewerId: viewerId,
+                  viewerName: viewerName,
+                  viewerPhoto: viewerPhoto,
+                  orders: state.orders,
+                  onCreatePost: _showCreatePostSheet,
+                  focusPostId: widget.focusPostId,
+                  focusCommentId: widget.focusCommentId,
+                ),
+                const _FollowingFarmsView(),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
-        leading: isFarmer
-            ? IconButton(
-                tooltip: 'Back to dashboard',
-                onPressed: () => context.go(AppRoutes.farmerDashboard),
-                icon: const Icon(Icons.arrow_back_rounded),
-              )
-            : null,
+        leading: IconButton(
+          tooltip: 'Back to dashboard',
+          onPressed: () => context.go(AppRoutes.farmerDashboard),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: Text(isFarmer ? 'Farm wall' : 'Feed'),
       ),
       body: SafeArea(
-        child: ColoredBox(
-          color: Theme.of(context).colorScheme.surfaceContainerLowest,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 820),
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
-                      child: _FeedIntro(viewerType: widget.viewerType),
-                    ),
-                  ),
-                  if (isFarmer)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
-                        child: _CreatePostPrompt(
-                          farmName: viewerName,
-                          farmPhoto: viewerPhoto,
-                          onTap: _showCreatePostSheet,
-                        ),
-                      ),
-                    ),
-                  if (state.orders.isNotEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
-                        child: _OrderBookPanel(orders: state.orders),
-                      ),
-                    ),
-                  SliverList.separated(
-                    itemCount: posts.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 22),
-                    itemBuilder: (context, index) => Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        18,
-                        index == 0 ? 2 : 0,
-                        18,
-                        index == posts.length - 1 ? 112 : 0,
-                      ),
-                      child: _FeedPostCard(
-                        post: posts[index],
-                        viewerType: widget.viewerType,
-                        viewerId: viewerId,
-                        viewerName: viewerName,
-                        authorPhoto: isFarmer ? viewerPhoto : null,
-                      ),
-                    ),
-                  ),
-                  if (posts.isEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 10, 18, 112),
-                        child: _EmptyFarmWall(
-                          viewerType: widget.viewerType,
-                          onCreate: _showCreatePostSheet,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+        child: _FeedPostsView(
+          posts: posts,
+          viewerType: widget.viewerType,
+          viewerId: viewerId,
+          viewerName: viewerName,
+          viewerPhoto: viewerPhoto,
+          orders: state.orders,
+          onCreatePost: _showCreatePostSheet,
+          focusPostId: widget.focusPostId,
+          focusCommentId: widget.focusCommentId,
         ),
       ),
     );
@@ -325,6 +376,266 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
       ),
     );
   }
+}
+
+class _FeedPostsView extends StatelessWidget {
+  const _FeedPostsView({
+    required this.posts,
+    required this.viewerType,
+    required this.viewerId,
+    required this.viewerName,
+    required this.viewerPhoto,
+    required this.orders,
+    required this.onCreatePost,
+    this.focusPostId,
+    this.focusCommentId,
+  });
+
+  final List<FeedPost> posts;
+  final FeedActorType viewerType;
+  final String viewerId;
+  final String viewerName;
+  final String? viewerPhoto;
+  final List<FeedOrder> orders;
+  final VoidCallback onCreatePost;
+  final String? focusPostId;
+  final String? focusCommentId;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFarmer = viewerType == FeedActorType.farmer;
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.surfaceContainerLowest,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 820),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+                  child: _FeedIntro(viewerType: viewerType),
+                ),
+              ),
+              if (isFarmer)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+                    child: _CreatePostPrompt(
+                      farmName: viewerName,
+                      farmPhoto: viewerPhoto,
+                      onTap: onCreatePost,
+                    ),
+                  ),
+                ),
+              if (orders.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+                    child: _OrderBookPanel(orders: orders),
+                  ),
+                ),
+              SliverList.separated(
+                itemCount: posts.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 22),
+                itemBuilder: (context, index) => Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    18,
+                    index == 0 ? 2 : 0,
+                    18,
+                    index == posts.length - 1 ? 112 : 0,
+                  ),
+                  child: _FeedPostCard(
+                    post: posts[index],
+                    viewerType: viewerType,
+                    viewerId: viewerId,
+                    viewerName: viewerName,
+                    authorPhoto: isFarmer ? viewerPhoto : null,
+                    highlightCommentId: posts[index].id == focusPostId
+                        ? focusCommentId
+                        : null,
+                  ),
+                ),
+              ),
+              if (posts.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 10, 18, 112),
+                    child: _EmptyFarmWall(
+                      viewerType: viewerType,
+                      onCreate: onCreatePost,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FollowingFarmsView extends ConsumerWidget {
+  const _FollowingFarmsView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final listings = ref.watch(nearbyListingsProvider(locale));
+    final followedFarmIds = ref.watch(followedFarmsProvider);
+    final theme = Theme.of(context);
+
+    return ColoredBox(
+      color: theme.colorScheme.surfaceContainerLowest,
+      child: listings.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => const Center(child: Text('Could not load farms.')),
+        data: (items) {
+          final farmListings = <CustomerListing>[];
+          final seen = <String>{};
+          for (final listing in items) {
+            if (!followedFarmIds.contains(listing.farmer.id)) continue;
+            if (seen.add(listing.farmer.id)) farmListings.add(listing);
+          }
+
+          if (farmListings.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Text(
+                  'Follow farms from their profile pages to see them here.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 112),
+            itemCount: farmListings.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 14),
+            itemBuilder: (context, index) {
+              final listing = farmListings[index];
+              final products = items
+                  .where((item) => item.farmer.id == listing.farmer.id)
+                  .take(3)
+                  .toList();
+              return _FollowingFarmCard(
+                listing: listing,
+                products: products,
+                locale: locale,
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FollowingFarmCard extends StatelessWidget {
+  const _FollowingFarmCard({
+    required this.listing,
+    required this.products,
+    required this.locale,
+  });
+
+  final CustomerListing listing;
+  final List<CustomerListing> products;
+  final String locale;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final farmer = listing.farmer;
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1,
+      shadowColor: Colors.black.withValues(alpha: 0.08),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.farmerPublicProfile(farmer.id)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 118,
+              width: double.infinity,
+              child: AppImage(
+                farmer.coverPhotoPlaceholder ??
+                    'assets/images/home/hero_market.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FarmAvatar(
+                    farmName: farmer.farmName,
+                    radius: 26,
+                    photo: farmer.profilePhotoPlaceholder,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          farmer.farmName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${listing.distanceKm.toStringAsFixed(1)} km away',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded),
+                ],
+              ),
+            ),
+            if (products.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: products
+                      .map(
+                        (product) => Chip(
+                          visualDensity: VisualDensity.compact,
+                          label: Text(
+                            '${product.productName(locale)} · ${_formatCompactQuantity(product.listing.quantity)} ${product.listing.unit}',
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _formatCompactQuantity(double value) {
+  return value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
 }
 
 class _CreatePostPrompt extends StatelessWidget {
@@ -574,6 +885,7 @@ class _FeedPostCard extends ConsumerStatefulWidget {
     required this.viewerId,
     required this.viewerName,
     required this.authorPhoto,
+    this.highlightCommentId,
   });
 
   final FeedPost post;
@@ -581,6 +893,7 @@ class _FeedPostCard extends ConsumerStatefulWidget {
   final String viewerId;
   final String viewerName;
   final String? authorPhoto;
+  final String? highlightCommentId;
 
   @override
   ConsumerState<_FeedPostCard> createState() => _FeedPostCardState();
@@ -646,10 +959,14 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FarmAvatar(
-                  farmName: post.authorName,
-                  radius: 24,
-                  photo: widget.authorPhoto,
+                InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: _openFarmProfile,
+                  child: FarmAvatar(
+                    farmName: post.authorName,
+                    radius: 24,
+                    photo: widget.authorPhoto,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -659,10 +976,19 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              post.authorName,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
+                            child: InkWell(
+                              onTap: _openFarmProfile,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 2,
+                                ),
+                                child: Text(
+                                  post.authorName,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -763,6 +1089,7 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   viewerType: widget.viewerType,
                   viewerId: widget.viewerId,
                   viewerName: widget.viewerName,
+                  highlightCommentId: widget.highlightCommentId,
                   onReply: _showReplySheet,
                   onCounter: (comment) => _showOfferSheet(comment: comment),
                   onReportComment: _reportComment,
@@ -770,6 +1097,9 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                   onDeclineOffer: (offer) => ref
                       .read(socialFeedControllerProvider.notifier)
                       .declineOffer(post.id, offer.id),
+                  onCancelOffer: (offer) => ref
+                      .read(socialFeedControllerProvider.notifier)
+                      .cancelOffer(post.id, offer.id),
                 ),
               ),
               ...looseOffers.map(
@@ -779,10 +1109,14 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                     post: post,
                     offer: offer,
                     viewerType: widget.viewerType,
+                    viewerId: widget.viewerId,
                     onAccept: () => _acceptOffer(offer),
                     onDecline: () => ref
                         .read(socialFeedControllerProvider.notifier)
                         .declineOffer(post.id, offer.id),
+                    onCancel: () => ref
+                        .read(socialFeedControllerProvider.notifier)
+                        .cancelOffer(post.id, offer.id),
                   ),
                 ),
               ),
@@ -848,6 +1182,15 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
         controller.deletePost(widget.post.id);
         break;
     }
+  }
+
+  void _openFarmProfile() {
+    final route = AppRoutes.farmerPublicProfile(widget.post.authorId);
+    if (widget.viewerType == FeedActorType.farmer) {
+      context.push('$route?preview=true');
+      return;
+    }
+    context.push(route);
   }
 
   void _sendComment() {
@@ -1248,11 +1591,13 @@ class _CommentThread extends StatelessWidget {
     required this.viewerType,
     required this.viewerId,
     required this.viewerName,
+    required this.highlightCommentId,
     required this.onReply,
     required this.onCounter,
     required this.onReportComment,
     required this.onAcceptOffer,
     required this.onDeclineOffer,
+    required this.onCancelOffer,
   });
 
   final FeedPost post;
@@ -1260,11 +1605,13 @@ class _CommentThread extends StatelessWidget {
   final FeedActorType viewerType;
   final String viewerId;
   final String viewerName;
+  final String? highlightCommentId;
   final ValueChanged<FeedComment> onReply;
   final ValueChanged<FeedComment> onCounter;
   final ValueChanged<FeedComment> onReportComment;
   final ValueChanged<FeedOffer> onAcceptOffer;
   final ValueChanged<FeedOffer> onDeclineOffer;
+  final ValueChanged<FeedOffer> onCancelOffer;
 
   @override
   Widget build(BuildContext context) {
@@ -1291,6 +1638,7 @@ class _CommentThread extends StatelessWidget {
         children: [
           _CommentBubble(
             comment: comment,
+            highlight: comment.id == highlightCommentId,
             canReply: post.areCommentsEnabled && comment.authorId != viewerId,
             canReport: comment.authorId != viewerId,
             canCounter:
@@ -1313,11 +1661,13 @@ class _CommentThread extends StatelessWidget {
                       viewerType: viewerType,
                       viewerId: viewerId,
                       viewerName: viewerName,
+                      highlightCommentId: highlightCommentId,
                       onReply: onReply,
                       onCounter: onCounter,
                       onReportComment: onReportComment,
                       onAcceptOffer: onAcceptOffer,
                       onDeclineOffer: onDeclineOffer,
+                      onCancelOffer: onCancelOffer,
                     ),
                   ),
                   ...offers.map(
@@ -1327,8 +1677,10 @@ class _CommentThread extends StatelessWidget {
                         post: post,
                         offer: offer,
                         viewerType: viewerType,
+                        viewerId: viewerId,
                         onAccept: () => onAcceptOffer(offer),
                         onDecline: () => onDeclineOffer(offer),
+                        onCancel: () => onCancelOffer(offer),
                       ),
                     ),
                   ),
@@ -1344,6 +1696,7 @@ class _CommentThread extends StatelessWidget {
 class _CommentBubble extends StatelessWidget {
   const _CommentBubble({
     required this.comment,
+    required this.highlight,
     required this.canReply,
     required this.canReport,
     required this.canCounter,
@@ -1353,6 +1706,7 @@ class _CommentBubble extends StatelessWidget {
   });
 
   final FeedComment comment;
+  final bool highlight;
   final bool canReply;
   final bool canReport;
   final bool canCounter;
@@ -1380,8 +1734,13 @@ class _CommentBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
+                color: highlight
+                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.55)
+                    : theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(16),
+                border: highlight
+                    ? Border.all(color: theme.colorScheme.primary, width: 1.4)
+                    : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1450,15 +1809,19 @@ class _OfferCard extends StatelessWidget {
     required this.post,
     required this.offer,
     required this.viewerType,
+    required this.viewerId,
     required this.onAccept,
     required this.onDecline,
+    required this.onCancel,
   });
 
   final FeedPost post;
   final FeedOffer offer;
   final FeedActorType viewerType;
+  final String viewerId;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -1467,6 +1830,8 @@ class _OfferCard extends StatelessWidget {
         !post.isOffersFinished &&
         offer.status == FeedOfferStatus.pending &&
         offer.actorType != viewerType;
+    final canCancel =
+        offer.status == FeedOfferStatus.pending && offer.authorId == viewerId;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1536,6 +1901,13 @@ class _OfferCard extends StatelessWidget {
                 TextButton(onPressed: onDecline, child: const Text('Decline')),
               ],
             ),
+          ] else if (canCancel) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onCancel,
+              icon: const Icon(Icons.cancel_outlined),
+              label: const Text('Cancel offer'),
+            ),
           ],
         ],
       ),
@@ -1555,6 +1927,7 @@ class _OfferStatusChip extends StatelessWidget {
       FeedOfferStatus.countered => 'Countered',
       FeedOfferStatus.accepted => 'Accepted',
       FeedOfferStatus.declined => 'Declined',
+      FeedOfferStatus.cancelled => 'Cancelled',
     };
     return Chip(visualDensity: VisualDensity.compact, label: Text(label));
   }
@@ -1921,7 +2294,6 @@ class _OfferSheet extends StatefulWidget {
 }
 
 class _OfferSheetState extends State<_OfferSheet> {
-  late final TextEditingController _title;
   late final TextEditingController _quantity;
   late final TextEditingController _price;
   late final TextEditingController _date;
@@ -1930,7 +2302,6 @@ class _OfferSheetState extends State<_OfferSheet> {
   @override
   void initState() {
     super.initState();
-    _title = TextEditingController();
     _quantity = TextEditingController();
     _price = TextEditingController();
     _date = TextEditingController();
@@ -1938,7 +2309,6 @@ class _OfferSheetState extends State<_OfferSheet> {
 
   @override
   void dispose() {
-    _title.dispose();
     _quantity.dispose();
     _price.dispose();
     _date.dispose();
@@ -1968,11 +2338,18 @@ class _OfferSheetState extends State<_OfferSheet> {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 14),
-              TextField(
-                controller: _title,
-                decoration: const InputDecoration(
-                  labelText: 'Offer',
-                  hintText: '2 kg strawberries',
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  widget.post.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -2006,8 +2383,8 @@ class _OfferSheetState extends State<_OfferSheet> {
               TextField(
                 controller: _date,
                 decoration: const InputDecoration(
-                  labelText: 'Pickup',
-                  hintText: 'Today after 17:30',
+                  labelText: 'Pickup window',
+                  hintText: 'Today 17:00-19:00',
                 ),
               ),
               const SizedBox(height: 10),
@@ -2029,7 +2406,9 @@ class _OfferSheetState extends State<_OfferSheet> {
                     final price = double.tryParse(
                       _price.text.trim().replaceAll(',', '.'),
                     );
-                    if (_title.text.trim().isEmpty || price == null) {
+                    if (_quantity.text.trim().isEmpty ||
+                        _date.text.trim().isEmpty ||
+                        price == null) {
                       return;
                     }
                     final controller = ref.read(
@@ -2041,12 +2420,10 @@ class _OfferSheetState extends State<_OfferSheet> {
                         authorId: widget.viewerId,
                         authorName: widget.viewerName,
                         actorType: widget.viewerType,
-                        title: _title.text,
-                        quantity: _quantity.text.isEmpty
-                            ? 'Custom'
-                            : _quantity.text,
+                        title: widget.post.title,
+                        quantity: _quantity.text,
                         price: price,
-                        dateLabel: _date.text.isEmpty ? 'Flexible' : _date.text,
+                        dateLabel: _date.text,
                         note: _note.text,
                         sourceCommentId: widget.comment?.id,
                         sourceCommentText: widget.comment?.text,
@@ -2060,12 +2437,10 @@ class _OfferSheetState extends State<_OfferSheet> {
                         authorId: widget.viewerId,
                         authorName: widget.viewerName,
                         actorType: widget.viewerType,
-                        title: _title.text,
-                        quantity: _quantity.text.isEmpty
-                            ? 'Custom'
-                            : _quantity.text,
+                        title: widget.post.title,
+                        quantity: _quantity.text,
                         price: price,
-                        dateLabel: _date.text.isEmpty ? 'Flexible' : _date.text,
+                        dateLabel: _date.text,
                         note: _note.text,
                       );
                     }

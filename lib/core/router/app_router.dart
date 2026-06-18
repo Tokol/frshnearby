@@ -258,6 +258,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => SocialFeedScreen(
           viewerType: FeedActorType.farmer,
           openComposer: state.uri.queryParameters['create'] == 'true',
+          focusPostId: state.uri.queryParameters['post'],
+          focusCommentId: state.uri.queryParameters['comment'],
         ),
       ),
       GoRoute(

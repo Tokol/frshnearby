@@ -2,7 +2,7 @@ enum FeedPostType { sellNow, preOrderRequest }
 
 enum FeedActorType { farmer, consumer }
 
-enum FeedOfferStatus { pending, countered, accepted, declined }
+enum FeedOfferStatus { pending, countered, accepted, declined, cancelled }
 
 class FeedComment {
   const FeedComment({
@@ -104,6 +104,44 @@ class FeedOrder {
   final double price;
   final String dateLabel;
   final DateTime createdAt;
+}
+
+class FeedNotification {
+  const FeedNotification({
+    required this.id,
+    required this.farmerId,
+    required this.postId,
+    required this.commentId,
+    required this.actorName,
+    required this.postTitle,
+    required this.text,
+    required this.createdAt,
+    this.seen = false,
+  });
+
+  final String id;
+  final String farmerId;
+  final String postId;
+  final String commentId;
+  final String actorName;
+  final String postTitle;
+  final String text;
+  final DateTime createdAt;
+  final bool seen;
+
+  FeedNotification copyWith({bool? seen}) {
+    return FeedNotification(
+      id: id,
+      farmerId: farmerId,
+      postId: postId,
+      commentId: commentId,
+      actorName: actorName,
+      postTitle: postTitle,
+      text: text,
+      createdAt: createdAt,
+      seen: seen ?? this.seen,
+    );
+  }
 }
 
 class FeedPost {
