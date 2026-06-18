@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/l10n/generated/app_localizations.dart';
+import '../../../core/utils/time_utils.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../deals/domain/deal.dart';
 import '../../deals/presentation/deal_controller.dart';
@@ -318,9 +319,9 @@ class _PendingFeedOfferCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Chip(
+              Chip(
                 visualDensity: VisualDensity.compact,
-                label: Text('Pending'),
+                label: Text('Pending · ${formatPendingDuration(offer.createdAt)}'),
               ),
             ],
           ),
