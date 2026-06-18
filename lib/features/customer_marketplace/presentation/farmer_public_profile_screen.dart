@@ -15,7 +15,10 @@ import '../../../core/widgets/loading_state.dart';
 import '../../customer/presentation/cart_controller.dart';
 import '../../customer/presentation/followed_farms_controller.dart';
 import '../../listings/domain/product_detail_labels.dart';
+import '../../social_feed/domain/feed_post.dart';
+import '../../social_feed/presentation/social_feed_controller.dart';
 import '../domain/customer_listing.dart';
+import '../domain/farmer_public_profile.dart';
 import 'customer_marketplace_controller.dart';
 
 class FarmerPublicProfileScreen extends ConsumerStatefulWidget {
@@ -39,6 +42,7 @@ class _FarmerPublicProfileScreenState
   bool _addingToCart = false;
   bool _cartPreviouslyHadItems = false;
   bool _restoredCartSelection = false;
+  int _selectedSection = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +50,7 @@ class _FarmerPublicProfileScreenState
     final locale = Localizations.localeOf(context).languageCode;
     final farmerAsync = ref.watch(farmerPublicProfileProvider(widget.farmerId));
     final listingsAsync = ref.watch(nearbyListingsProvider(locale));
+    final feedState = ref.watch(socialFeedControllerProvider);
     final cartItems = ref.watch(cartControllerProvider);
     final isFollowing = ref.watch(
       followedFarmsProvider.select((ids) => ids.contains(widget.farmerId)),
@@ -88,6 +93,13 @@ class _FarmerPublicProfileScreenState
                   .toList() ??
               const <CustomerListing>[];
           final nearestListing = listings.isEmpty ? null : listings.first;
+          final farmPosts = feedState.posts
+              .where(
+                (post) =>
+                    post.authorId == farmer.id ||
+                    post.authorName == farmer.farmName,
+              )
+              .toList();
 
           return CustomScrollView(
             slivers: [
@@ -305,44 +317,67 @@ class _FarmerPublicProfileScreenState
                             ],
                           ),
                           const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Text(
-                                l10n.productsLabel,
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w900),
-                              ),
-                              const Spacer(),
-                              Text(l10n.availableCountLabel(listings.length)),
-                            ],
+                          _FarmProfileTabs(
+                            selected: _selectedSection,
+                            onChanged: (value) =>
+                                setState(() => _selectedSection = value),
                           ),
-                          const SizedBox(height: 14),
-                          if (listingsAsync.isLoading)
-                            const LinearProgressIndicator()
-                          else if (listings.isEmpty)
-                            const _NoProduceCard()
-                          else
-                            ...listings.map(
-                              (listing) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _OrderProductCard(
-                                  listing: listing,
-                                  locale: locale,
-                                  selected:
-                                      !widget.preview &&
-                                      _selectedQuantities.containsKey(
-                                        listing.listing.id,
-                                      ),
-                                  quantity:
-                                      _selectedQuantities[listing.listing.id] ??
-                                      1,
-                                  onSelect: widget.preview
-                                      ? null
-                                      : () => _toggleProduct(listing),
-                                  onDecrease: () => _decreaseQuantity(listing),
-                                  onIncrease: () => _increaseQuantity(listing),
+                          const SizedBox(height: 18),
+                          if (_selectedSection == 0) ...[
+                            Row(
+                              children: [
+                                Text(
+                                  'Shop',
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.w900),
+                                ),
+                                const Spacer(),
+                                Text(l10n.availableCountLabel(listings.length)),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            if (listingsAsync.isLoading)
+                              const LinearProgressIndicator()
+                            else if (listings.isEmpty)
+                              const _NoProduceCard()
+                            else
+                              ...listings.map(
+                                (listing) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _OrderProductCard(
+                                    listing: listing,
+                                    locale: locale,
+                                    selected:
+                                        !widget.preview &&
+                                        _selectedQuantities.containsKey(
+                                          listing.listing.id,
+                                        ),
+                                    quantity:
+                                        _selectedQuantities[listing
+                                            .listing
+                                            .id] ??
+                                        0,
+                                    onDecrease: widget.preview
+                                        ? null
+                                        : () => _decreaseQuantity(listing),
+                                    onIncrease: widget.preview
+                                        ? null
+                                        : () => _increaseQuantity(listing),
+                                  ),
                                 ),
                               ),
+                          ] else if (_selectedSection == 1)
+                            _FarmWallSection(posts: farmPosts)
+                          else
+                            _FarmAboutSection(
+                              farmer: farmer,
+                              nearestListing: nearestListing,
+                              onDirections: nearestListing == null
+                                  ? null
+                                  : () => _openDirections(
+                                      nearestListing.listing.latitude,
+                                      nearestListing.listing.longitude,
+                                    ),
                             ),
                         ],
                       ),
@@ -443,7 +478,7 @@ class _FarmerPublicProfileScreenState
 
   void _increaseQuantity(CustomerListing listing) {
     final available = listing.listing.quantity;
-    final current = _selectedQuantities[listing.listing.id] ?? 1;
+    final current = _selectedQuantities[listing.listing.id] ?? 0;
     if (current >= available) {
       HapticFeedback.mediumImpact();
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -466,28 +501,16 @@ class _FarmerPublicProfileScreenState
   }
 
   void _decreaseQuantity(CustomerListing listing) {
-    final current = _selectedQuantities[listing.listing.id] ?? 1;
-    if (current <= 1) return;
-    HapticFeedback.selectionClick();
-    setState(() {
-      _selectedQuantities[listing.listing.id] = current - 1;
-    });
-  }
-
-  void _toggleProduct(CustomerListing listing) {
     final id = listing.listing.id;
+    final current = _selectedQuantities[id] ?? 0;
+    if (current <= 0) return;
     HapticFeedback.selectionClick();
     setState(() {
-      if (_selectedQuantities.containsKey(id)) {
+      if (current <= 1) {
         _selectedQuantities.remove(id);
         ref.read(cartControllerProvider.notifier).remove(id);
       } else {
-        final cartItem = ref
-            .read(cartControllerProvider)
-            .where((item) => item.listing.listing.id == id)
-            .firstOrNull;
-        _selectedQuantities[id] =
-            cartItem?.quantity ?? _initialQuantity(listing);
+        _selectedQuantities[id] = current - 1;
       }
     });
   }
@@ -518,9 +541,6 @@ class _FarmerPublicProfileScreenState
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  static double _initialQuantity(CustomerListing listing) =>
-      listing.listing.quantity < 1 ? listing.listing.quantity : 1;
-
   static String _formatQuantity(double value) =>
       value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
 }
@@ -548,13 +568,268 @@ class _FollowButton extends StatelessWidget {
   }
 }
 
+class _FarmProfileTabs extends StatelessWidget {
+  const _FarmProfileTabs({required this.selected, required this.onChanged});
+
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton<int>(
+      showSelectedIcon: false,
+      segments: const [
+        ButtonSegment(
+          value: 0,
+          icon: Icon(Icons.storefront_outlined),
+          label: Text('Shop'),
+        ),
+        ButtonSegment(
+          value: 1,
+          icon: Icon(Icons.dynamic_feed_outlined),
+          label: Text('Wall'),
+        ),
+        ButtonSegment(
+          value: 2,
+          icon: Icon(Icons.info_outline_rounded),
+          label: Text('About'),
+        ),
+      ],
+      selected: {selected},
+      onSelectionChanged: (values) => onChanged(values.first),
+    );
+  }
+}
+
+class _FarmWallSection extends StatelessWidget {
+  const _FarmWallSection({required this.posts});
+
+  final List<FeedPost> posts;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (posts.isEmpty) {
+      return const _QuietInfoCard(
+        icon: Icons.dynamic_feed_outlined,
+        title: 'No wall posts yet',
+        body: 'New farm updates, pre-orders, and photo posts will appear here.',
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Farm wall',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...posts.map(
+          (post) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    FarmAvatar(farmName: post.authorName, radius: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        post.authorName,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _compactDate(post.createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  post.title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(post.description),
+                if (post.photos.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: AppImage(
+                      post.photos.first,
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  if (post.photos.length > 1) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      '+${post.photos.length - 1} more photos',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ],
+                const SizedBox(height: 8),
+                Text(
+                  '${post.comments.length} comments · ${post.offers.length} offers',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _compactDate(DateTime value) {
+    final now = DateTime.now();
+    final diff = now.difference(value);
+    if (diff.inHours < 1) return '${diff.inMinutes.clamp(1, 59)}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    return '${value.day}.${value.month}.${value.year}';
+  }
+}
+
+class _FarmAboutSection extends StatelessWidget {
+  const _FarmAboutSection({
+    required this.farmer,
+    required this.nearestListing,
+    required this.onDirections,
+  });
+
+  final FarmerPublicProfile farmer;
+  final CustomerListing? nearestListing;
+  final VoidCallback? onDirections;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _QuietInfoCard(
+          icon: Icons.eco_outlined,
+          title: 'About ${farmer.farmName}',
+          body: farmer.shortDescription,
+        ),
+        const SizedBox(height: 12),
+        _QuietInfoCard(
+          icon: farmer.pickupAvailable
+              ? Icons.storefront_outlined
+              : Icons.local_shipping_outlined,
+          title: 'Pickup and delivery',
+          body: farmer.pickupAvailable
+              ? farmer.pickupNote ??
+                    'Farm pickup and courier delivery are available.'
+              : 'Courier delivery is available.',
+        ),
+        const SizedBox(height: 12),
+        _QuietInfoCard(
+          icon: Icons.place_outlined,
+          title: farmer.approximateLocation,
+          body: nearestListing == null
+              ? 'Distance is unavailable.'
+              : '${nearestListing!.distanceKm.toStringAsFixed(1)} km away.',
+          actionLabel: nearestListing == null ? null : 'Directions',
+          onAction: onDirections,
+        ),
+        const SizedBox(height: 12),
+        _QuietInfoCard(
+          icon: Icons.star_rounded,
+          title: farmer.reviewCount == 0
+              ? 'New farm'
+              : '${farmer.rating.toStringAsFixed(1)} rating',
+          body: '${farmer.reviewCount} customer reviews',
+        ),
+      ],
+    );
+  }
+}
+
+class _QuietInfoCard extends StatelessWidget {
+  const _QuietInfoCard({
+    required this.icon,
+    required this.title,
+    required this.body,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(body),
+                if (actionLabel != null && onAction != null) ...[
+                  const SizedBox(height: 8),
+                  TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _OrderProductCard extends StatelessWidget {
   const _OrderProductCard({
     required this.listing,
     required this.locale,
     required this.selected,
     required this.quantity,
-    required this.onSelect,
     required this.onDecrease,
     required this.onIncrease,
   });
@@ -563,9 +838,8 @@ class _OrderProductCard extends StatelessWidget {
   final String locale;
   final bool selected;
   final double quantity;
-  final VoidCallback? onSelect;
-  final VoidCallback onDecrease;
-  final VoidCallback onIncrease;
+  final VoidCallback? onDecrease;
+  final VoidCallback? onIncrease;
 
   @override
   Widget build(BuildContext context) {
@@ -582,213 +856,197 @@ class _OrderProductCard extends StatelessWidget {
           ? theme.colorScheme.primaryContainer.withValues(alpha: 0.32)
           : theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(22),
-      child: InkWell(
-        onTap: onSelect,
-        borderRadius: BorderRadius.circular(22),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: selected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outlineVariant,
-              width: selected ? 2 : 1,
-            ),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+            width: selected ? 2 : 1,
           ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: AppImage(
-                      asset,
-                      width: 78,
-                      height: 78,
-                      fit: BoxFit.cover,
-                    ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: AppImage(
+                    asset,
+                    width: 78,
+                    height: 78,
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(width: 13),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          listing.variantName(locale) ??
-                              listing.productName(locale),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        listing.variantName(locale) ??
+                            listing.productName(locale),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '€${item.price.toStringAsFixed(2)} per ${item.unit}',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: const Color(0xFF2F6B45),
-                            fontWeight: FontWeight.w900,
-                          ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        '€${item.price.toStringAsFixed(2)} per ${item.unit}',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: const Color(0xFF2F6B45),
+                          fontWeight: FontWeight.w900,
                         ),
+                      ),
+                      Text(
+                        '${_FarmerPublicProfileScreenState._formatQuantity(item.quantity)} ${item.unit} available',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 7),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          if (listing.farmer.pickupAvailable)
+                            const _SmallFulfillmentLabel(
+                              icon: Icons.storefront_outlined,
+                              text: 'Pickup',
+                            ),
+                          const _SmallFulfillmentLabel(
+                            icon: Icons.local_shipping_outlined,
+                            text: 'Delivery',
+                          ),
+                        ],
+                      ),
+                      if (item.description.trim().isNotEmpty) ...[
+                        const SizedBox(height: 7),
                         Text(
-                          '${_FarmerPublicProfileScreenState._formatQuantity(item.quantity)} ${item.unit} available',
+                          item.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall,
                         ),
-                        const SizedBox(height: 7),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
+                      ],
+                      if (item.farmingMethod?.trim().isNotEmpty ?? false) ...[
+                        const SizedBox(height: 6),
+                        Row(
                           children: [
-                            if (listing.farmer.pickupAvailable)
-                              const _SmallFulfillmentLabel(
-                                icon: Icons.storefront_outlined,
-                                text: 'Pickup',
+                            const Icon(Icons.eco_outlined, size: 15),
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: Text(
+                                item.farmingMethod!,
+                                style: theme.textTheme.labelMedium,
                               ),
-                            const _SmallFulfillmentLabel(
-                              icon: Icons.local_shipping_outlined,
-                              text: 'Delivery',
                             ),
                           ],
                         ),
-                        if (item.description.trim().isNotEmpty) ...[
-                          const SizedBox(height: 7),
-                          Text(
-                            item.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ],
-                        if (item.farmingMethod?.trim().isNotEmpty ?? false) ...[
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(Icons.eco_outlined, size: 15),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  item.farmingMethod!,
-                                  style: theme.textTheme.labelMedium,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (item.harvestDate != null) ...[
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_today_outlined,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                '${item.harvestDate!.isAfter(DateTime.now()) ? detailLabels.futureDate : detailLabels.pastDate} ${DateFormat('d MMM').format(item.harvestDate!)}',
-                                style: theme.textTheme.labelMedium,
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (item.bestBeforeDate != null) ...[
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.event_available_outlined,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'Best before ${DateFormat('d MMM').format(item.bestBeforeDate!)}',
-                                style: theme.textTheme.labelMedium,
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (item.storageInstructions?.trim().isNotEmpty ??
-                            false) ...[
-                          const SizedBox(height: 6),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(Icons.ac_unit_outlined, size: 14),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: Text(
-                                  item.storageInstructions!,
-                                  style: theme.textTheme.labelMedium,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
                       ],
-                    ),
+                      if (item.harvestDate != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, size: 14),
+                            const SizedBox(width: 5),
+                            Text(
+                              '${item.harvestDate!.isAfter(DateTime.now()) ? detailLabels.futureDate : detailLabels.pastDate} ${DateFormat('d MMM').format(item.harvestDate!)}',
+                              style: theme.textTheme.labelMedium,
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (item.bestBeforeDate != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.event_available_outlined,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'Best before ${DateFormat('d MMM').format(item.bestBeforeDate!)}',
+                              style: theme.textTheme.labelMedium,
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (item.storageInstructions?.trim().isNotEmpty ??
+                          false) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.ac_unit_outlined, size: 14),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: Text(
+                                item.storageInstructions!,
+                                style: theme.textTheme.labelMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
-                  if (onSelect != null)
-                    Icon(
-                      selected
-                          ? Icons.check_box_rounded
-                          : Icons.check_box_outline_blank_rounded,
-                      color: selected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.outline,
-                    ),
-                ],
-              ),
-              if (selected) ...[
-                const SizedBox(height: 12),
-                const Divider(height: 1),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Text(
-                      AppLocalizations.of(context).quantityLabel,
-                      style: theme.textTheme.labelLarge,
-                    ),
-                    const Spacer(),
-                    IconButton.filledTonal(
-                      key: ValueKey('customer-decrease-${item.id}'),
-                      onPressed: quantity <= 1 ? null : onDecrease,
-                      icon: const Icon(Icons.remove_rounded),
-                    ),
-                    SizedBox(
-                      width: 78,
-                      child: Text(
-                        '${_FarmerPublicProfileScreenState._formatQuantity(quantity)} ${item.unit}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                    ),
-                    IconButton.filledTonal(
-                      key: ValueKey('customer-increase-${item.id}'),
-                      tooltip: quantity >= item.quantity
-                          ? 'Maximum available quantity selected'
-                          : 'Add one ${item.unit}',
-                      onPressed: onIncrease,
-                      icon: const Icon(Icons.add_rounded),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(
-                      '${_FarmerPublicProfileScreenState._formatQuantity(quantity)} ${item.unit} × €${item.price.toStringAsFixed(2)}',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    const Spacer(),
-                    Text(
-                      '€${(quantity * item.price).toStringAsFixed(2)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Text(
+                  AppLocalizations.of(context).quantityLabel,
+                  style: theme.textTheme.labelLarge,
+                ),
+                const Spacer(),
+                IconButton.filledTonal(
+                  key: ValueKey('customer-decrease-${item.id}'),
+                  onPressed: quantity <= 0 ? null : onDecrease,
+                  icon: const Icon(Icons.remove_rounded),
+                ),
+                SizedBox(
+                  width: 78,
+                  child: Text(
+                    '${_FarmerPublicProfileScreenState._formatQuantity(quantity)} ${item.unit}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                IconButton.filledTonal(
+                  key: ValueKey('customer-increase-${item.id}'),
+                  tooltip: quantity >= item.quantity
+                      ? 'Maximum available quantity selected'
+                      : 'Add one ${item.unit}',
+                  onPressed: onIncrease,
+                  icon: const Icon(Icons.add_rounded),
+                ),
+              ],
+            ),
+            if (selected) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text(
+                    '${_FarmerPublicProfileScreenState._formatQuantity(quantity)} ${item.unit} × €${item.price.toStringAsFixed(2)}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const Spacer(),
+                  Text(
+                    '€${(quantity * item.price).toStringAsFixed(2)}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );

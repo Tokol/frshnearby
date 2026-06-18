@@ -16,6 +16,7 @@ class FarmerDealsScreen extends ConsumerStatefulWidget {
 
 class _FarmerDealsScreenState extends ConsumerState<FarmerDealsScreen> {
   int _selectedIndex = 0;
+  _OrderBookView _selectedView = _OrderBookView.orders;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +61,8 @@ class _FarmerDealsScreenState extends ConsumerState<FarmerDealsScreen> {
                 (a, b) => b.first.createdAt.compareTo(a.first.createdAt),
               );
 
+          final productGroups = _ProductOrderGroup.fromOrders(filtered);
+
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 920),
@@ -80,10 +83,20 @@ class _FarmerDealsScreenState extends ConsumerState<FarmerDealsScreen> {
                       },
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                    child: _OrderBookViewToggle(
+                      selectedView: _selectedView,
+                      onSelected: (view) {
+                        setState(() => _selectedView = view);
+                      },
+                    ),
+                  ),
                   Expanded(
                     child: filtered.isEmpty
                         ? const _EmptyOrderBook()
-                        : ListView.separated(
+                        : _selectedView == _OrderBookView.orders
+                        ? ListView.separated(
                             padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
                             itemCount: filtered.length,
                             separatorBuilder: (_, _) =>
@@ -98,6 +111,20 @@ class _FarmerDealsScreenState extends ConsumerState<FarmerDealsScreen> {
                                 ),
                               );
                             },
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+                            itemCount: productGroups.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 14),
+                            itemBuilder: (context, index) {
+                              return _ProductOrderCard(
+                                group: productGroups[index],
+                                onOpenOrder: (order) => context.push(
+                                  AppRoutes.farmerOrderDetail(order.id),
+                                ),
+                              );
+                            },
                           ),
                   ),
                 ],
@@ -106,6 +133,39 @@ class _FarmerDealsScreenState extends ConsumerState<FarmerDealsScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+enum _OrderBookView { orders, products }
+
+class _OrderBookViewToggle extends StatelessWidget {
+  const _OrderBookViewToggle({
+    required this.selectedView,
+    required this.onSelected,
+  });
+
+  final _OrderBookView selectedView;
+  final ValueChanged<_OrderBookView> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton<_OrderBookView>(
+      showSelectedIcon: false,
+      selected: {selectedView},
+      onSelectionChanged: (selection) => onSelected(selection.first),
+      segments: const [
+        ButtonSegment(
+          value: _OrderBookView.orders,
+          icon: Icon(Icons.receipt_long_outlined, size: 18),
+          label: Text('Orders'),
+        ),
+        ButtonSegment(
+          value: _OrderBookView.products,
+          icon: Icon(Icons.inventory_2_outlined, size: 18),
+          label: Text('Products'),
+        ),
+      ],
     );
   }
 }
@@ -144,6 +204,217 @@ class _OrderTabs extends StatelessWidget {
   }
 }
 
+class _ProductOrderGroup {
+  const _ProductOrderGroup({
+    required this.productId,
+    required this.title,
+    required this.unit,
+    required this.orders,
+  });
+
+  final String productId;
+  final String title;
+  final String unit;
+  final List<Deal> orders;
+
+  double get totalQuantity =>
+      orders.fold(0, (sum, order) => sum + order.quantity);
+
+  double get totalValue =>
+      orders.fold(0, (sum, order) => sum + order.quantity * order.price);
+
+  DateTime get newestOrder => orders
+      .map((order) => order.createdAt)
+      .reduce((value, element) => value.isAfter(element) ? value : element);
+
+  static List<_ProductOrderGroup> fromOrders(List<List<Deal>> orderGroups) {
+    final byProduct = <String, List<Deal>>{};
+    for (final group in orderGroups) {
+      for (final order in group) {
+        final key = '${order.productId}|${order.title}|${order.unit}';
+        byProduct.putIfAbsent(key, () => []).add(order);
+      }
+    }
+
+    final groups = byProduct.entries.map((entry) {
+      final first = entry.value.first;
+      return _ProductOrderGroup(
+        productId: first.productId,
+        title: first.title.split(' / ').first,
+        unit: first.unit,
+        orders: entry.value..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+      );
+    }).toList();
+
+    groups.sort((a, b) {
+      final statusCompare = _productStatusRank(
+        a.orders.first.status,
+      ).compareTo(_productStatusRank(b.orders.first.status));
+      if (statusCompare != 0) return statusCompare;
+      return b.newestOrder.compareTo(a.newestOrder);
+    });
+    return groups;
+  }
+
+  static int _productStatusRank(DealStatus status) {
+    return switch (status) {
+      DealStatus.negotiating => 0,
+      DealStatus.confirmed => 1,
+      DealStatus.readyForPickup => 2,
+      DealStatus.completed => 3,
+      DealStatus.cancelled => 4,
+    };
+  }
+}
+
+class _ProductOrderCard extends StatelessWidget {
+  const _ProductOrderCard({required this.group, required this.onOpenOrder});
+
+  final _ProductOrderGroup group;
+  final ValueChanged<Deal> onOpenOrder;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final quantity = _formatQuantity(group.totalQuantity);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _ProductIcon(productId: group.productId),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${group.orders.length} ${group.orders.length == 1 ? 'order' : 'orders'}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$quantity ${group.unit}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    '€${group.totalValue.toStringAsFixed(2)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          ...group.orders.map((order) {
+            final status = _statusStyle(order.status, theme);
+            return InkWell(
+              onTap: () => onOpenOrder(order),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _customerName(order.customerId),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '${order.createdAt.day}.${order.createdAt.month}.${order.createdAt.year}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${_formatQuantity(order.quantity)} ${order.unit}',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: status.color.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Text(
+                        status.label,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: status.color,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right_rounded),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  _StatusStyle _statusStyle(DealStatus status, ThemeData theme) {
+    return switch (status) {
+      DealStatus.negotiating => const _StatusStyle(
+        'New request',
+        Color(0xFFB36B18),
+      ),
+      DealStatus.confirmed => const _StatusStyle('Accepted', Color(0xFF315A87)),
+      DealStatus.readyForPickup => const _StatusStyle(
+        'Ready',
+        Color(0xFF2F6B45),
+      ),
+      DealStatus.completed => const _StatusStyle(
+        'Delivered',
+        Color(0xFF667066),
+      ),
+      DealStatus.cancelled => _StatusStyle('Declined', theme.colorScheme.error),
+    };
+  }
+}
+
 class _OrderCard extends StatelessWidget {
   const _OrderCard({required this.orders, required this.onOpen});
 
@@ -155,12 +426,7 @@ class _OrderCard extends StatelessWidget {
     final order = orders.first;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final customer = switch (order.customerId) {
-      'customer-emma' => 'Emma Wilson',
-      'customer-liam' => 'Liam Korhonen',
-      'customer-sofia' => 'Sofia Lind',
-      _ => 'FreshFarm customer',
-    };
+    final customer = _customerName(order.customerId);
     final status = _statusStyle(order.status, theme, l10n);
     final total = orders.fold<double>(
       0,
@@ -387,4 +653,20 @@ class _EmptyOrderBook extends StatelessWidget {
       ),
     );
   }
+}
+
+String _customerName(String customerId) {
+  return switch (customerId) {
+    'customer-emma' => 'Emma Wilson',
+    'customer-liam' => 'Liam Korhonen',
+    'customer-sofia' => 'Sofia Lind',
+    'customer-aada' => 'Aada Virtanen',
+    'customer-noah' => 'Noah Berg',
+    'customer-olivia' => 'Olivia Martin',
+    _ => 'FreshFarm customer',
+  };
+}
+
+String _formatQuantity(double value) {
+  return value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
 }

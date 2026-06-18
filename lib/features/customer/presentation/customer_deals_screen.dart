@@ -8,6 +8,11 @@ import '../../deals/presentation/deal_controller.dart';
 import '../../deals/domain/deal.dart';
 import '../../deals/domain/review_rating.dart';
 import '../../../core/widgets/app_image.dart';
+import '../../../core/widgets/farm_avatar.dart';
+import '../../auth/presentation/auth_controller.dart';
+import '../../social_feed/domain/feed_post.dart';
+import '../../social_feed/presentation/social_feed_controller.dart';
+import '../../social_feed/presentation/social_feed_screen.dart';
 import 'cart_controller.dart';
 import 'fulfillment_controller.dart';
 import 'payment_authorization_controller.dart';
@@ -30,6 +35,13 @@ class _CustomerDealsScreenState extends ConsumerState<CustomerDealsScreen> {
     final l10n = AppLocalizations.of(context);
     final items = ref.watch(cartControllerProvider);
     final dealState = ref.watch(dealControllerProvider);
+    final feedState = ref.watch(socialFeedControllerProvider);
+    final user = ref.watch(authControllerProvider).user;
+    final activeOffers = visiblePendingFeedOffersForConsumer(
+      feedState.posts,
+      viewerId: user?.id ?? 'customer-feed-viewer',
+      viewerName: user?.name ?? 'Customer',
+    );
     final orderCount = dealState.deals
         .map((order) => order.orderGroupId)
         .toSet()
@@ -59,6 +71,15 @@ class _CustomerDealsScreenState extends ConsumerState<CustomerDealsScreen> {
               segments: [
                 ButtonSegment(
                   value: 0,
+                  icon: const Icon(Icons.local_offer_outlined),
+                  label: Text(
+                    activeOffers.isEmpty
+                        ? 'Offers'
+                        : 'Offers (${activeOffers.length})',
+                  ),
+                ),
+                ButtonSegment(
+                  value: 1,
                   icon: const Icon(Icons.shopping_bag_outlined),
                   label: Text(
                     items.isEmpty
@@ -67,7 +88,7 @@ class _CustomerDealsScreenState extends ConsumerState<CustomerDealsScreen> {
                   ),
                 ),
                 ButtonSegment(
-                  value: 1,
+                  value: 2,
                   icon: const Icon(Icons.receipt_long_outlined),
                   label: Text(
                     orderCount == 0
@@ -84,43 +105,46 @@ class _CustomerDealsScreenState extends ConsumerState<CustomerDealsScreen> {
             ),
           ),
           Expanded(
-            child: _section == 0
-                ? items.isEmpty
-                      ? const _EmptyCart()
-                      : ListView(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
-                          children: [
-                            ...items.map(
-                              (item) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _CartItemCard(item: item),
-                              ),
+            child: switch (_section) {
+              0 => _FeedOffersList(offers: activeOffers),
+              1 =>
+                items.isEmpty
+                    ? const _EmptyCart()
+                    : ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
+                        children: [
+                          ...items.map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _CartItemCard(item: item),
                             ),
-                            const SizedBox(height: 8),
-                            _FulfillmentCard(
-                              pickupAvailable: pickupAvailable,
-                              selected: selectedMethod,
-                              distanceKm: distanceKm,
-                              weightKg: weightKg,
-                              deliveryFee: deliveryFee,
-                              onSelected: (method) => ref
-                                  .read(fulfillmentControllerProvider.notifier)
-                                  .select(method),
-                            ),
-                            const SizedBox(height: 12),
-                            _Bill(
-                              items: items,
-                              subtotal: subtotal,
-                              deliveryFee: deliveryFee,
-                              total: total,
-                            ),
-                          ],
-                        )
-                : _OrdersList(state: dealState),
+                          ),
+                          const SizedBox(height: 8),
+                          _FulfillmentCard(
+                            pickupAvailable: pickupAvailable,
+                            selected: selectedMethod,
+                            distanceKm: distanceKm,
+                            weightKg: weightKg,
+                            deliveryFee: deliveryFee,
+                            onSelected: (method) => ref
+                                .read(fulfillmentControllerProvider.notifier)
+                                .select(method),
+                          ),
+                          const SizedBox(height: 12),
+                          _Bill(
+                            items: items,
+                            subtotal: subtotal,
+                            deliveryFee: deliveryFee,
+                            total: total,
+                          ),
+                        ],
+                      ),
+              _ => _OrdersList(state: dealState),
+            },
           ),
         ],
       ),
-      bottomNavigationBar: _section != 0 || items.isEmpty
+      bottomNavigationBar: _section != 1 || items.isEmpty
           ? null
           : SafeArea(
               top: false,
@@ -260,7 +284,7 @@ class _CustomerDealsScreenState extends ConsumerState<CustomerDealsScreen> {
       ref.read(fulfillmentControllerProvider.notifier).reset();
       HapticFeedback.mediumImpact();
       if (!mounted) return;
-      setState(() => _section = 1);
+      setState(() => _section = 2);
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
@@ -280,6 +304,139 @@ class _CustomerDealsScreenState extends ConsumerState<CustomerDealsScreen> {
     } finally {
       if (mounted) setState(() => _checkingOut = false);
     }
+  }
+}
+
+class _FeedOffersList extends ConsumerWidget {
+  const _FeedOffersList({required this.offers});
+
+  final List<({FeedPost post, FeedOffer offer})> offers;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (offers.isEmpty) return const _EmptyOffers();
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      itemCount: offers.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final item = offers[index];
+        return _FeedOfferDecisionCard(post: item.post, offer: item.offer);
+      },
+    );
+  }
+}
+
+class _FeedOfferDecisionCard extends ConsumerWidget {
+  const _FeedOfferDecisionCard({required this.post, required this.offer});
+
+  final FeedPost post;
+  final FeedOffer offer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              FarmAvatar(farmName: post.authorName, radius: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      post.authorName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      'Offer from farmer',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '€${offer.price.toStringAsFixed(2)}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            offer.title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text('${offer.quantity} · ${offer.dateLabel}'),
+          if (offer.note.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(offer.note),
+          ],
+          if (offer.sourceCommentText != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                offer.sourceCommentText!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => ref
+                      .read(socialFeedControllerProvider.notifier)
+                      .declineOffer(post.id, offer.id),
+                  child: const Text('Decline'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => acceptFeedOfferFromPost(
+                    context: context,
+                    ref: ref,
+                    post: post,
+                    offer: offer,
+                  ),
+                  icon: const Icon(Icons.lock_outline_rounded),
+                  label: const Text('Pay'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1090,6 +1247,36 @@ class _EmptyCart extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(l10n.cartEmptyMessage),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyOffers extends StatelessWidget {
+  const _EmptyOffers();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.local_offer_outlined, size: 52),
+            const SizedBox(height: 14),
+            const Text(
+              'No active offers',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'When a farmer replies with an offer, it will appear here for quick payment.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ],
         ),
       ),

@@ -4,9 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_routes.dart';
+import '../../auth/presentation/auth_controller.dart';
 import '../../deals/domain/deal.dart';
 import '../../deals/presentation/deal_controller.dart';
 import '../../customer/presentation/cart_controller.dart';
+import '../../social_feed/presentation/social_feed_controller.dart';
+import '../../social_feed/presentation/social_feed_screen.dart';
 
 enum AppShellMode { customer, farmer }
 
@@ -22,25 +25,6 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (mode == AppShellMode.customer) {
-      return Scaffold(
-        body: Column(
-          children: [
-            _PrototypeViewSwitcher(mode: mode),
-            Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(child: navigationShell),
-                  if (navigationShell.currentIndex != 3)
-                    _CustomerFloatingActions(navigationShell: navigationShell),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
       body: Column(
         children: [
@@ -57,14 +41,37 @@ class AppShell extends ConsumerWidget {
           );
         },
         destinations: mode == AppShellMode.customer
-            ? _customerDestinations(context)
+            ? _customerDestinations(context, ref)
             : _farmerDestinations(context, ref),
       ),
     );
   }
 
-  List<NavigationDestination> _customerDestinations(BuildContext context) {
+  List<NavigationDestination> _customerDestinations(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     final l10n = AppLocalizations.of(context);
+    final cartCount = ref.watch(cartControllerProvider).length;
+    final user = ref.watch(authControllerProvider).user;
+    final feed = ref.watch(socialFeedControllerProvider);
+    final dealState = ref.watch(dealControllerProvider);
+    final offerCount = visiblePendingFeedOffersForConsumer(
+      feed.posts,
+      viewerId: user?.id ?? 'customer-feed-viewer',
+      viewerName: user?.name ?? 'Customer',
+    ).length;
+    final activeOrderCount = dealState.deals
+        .where(
+          (deal) =>
+              deal.status == DealStatus.negotiating ||
+              deal.status == DealStatus.confirmed ||
+              deal.status == DealStatus.readyForPickup,
+        )
+        .map((deal) => deal.orderGroupId)
+        .toSet()
+        .length;
+    final orderBadgeCount = cartCount + offerCount + activeOrderCount;
 
     return [
       NavigationDestination(
@@ -73,19 +80,26 @@ class AppShell extends ConsumerWidget {
         label: l10n.customerHomeTab,
       ),
       NavigationDestination(
-        icon: const Icon(Icons.search_outlined),
-        selectedIcon: const Icon(Icons.search),
-        label: l10n.customerSearchTab,
+        icon: const Icon(Icons.dynamic_feed_outlined),
+        selectedIcon: const Icon(Icons.dynamic_feed_rounded),
+        label: 'Feed',
       ),
       NavigationDestination(
-        icon: const Icon(Icons.chat_bubble_outline),
-        selectedIcon: const Icon(Icons.chat_bubble),
-        label: l10n.messagesTab,
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.local_offer_outlined),
-        selectedIcon: const Icon(Icons.local_offer),
-        label: l10n.dealsTab,
+        icon: Badge(
+          isLabelVisible: orderBadgeCount > 0,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          label: Text('$orderBadgeCount'),
+          child: const Icon(Icons.receipt_long_outlined),
+        ),
+        selectedIcon: Badge(
+          isLabelVisible: orderBadgeCount > 0,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          label: Text('$orderBadgeCount'),
+          child: const Icon(Icons.receipt_long),
+        ),
+        label: l10n.ordersTitle,
       ),
       NavigationDestination(
         icon: const Icon(Icons.person_outline),
@@ -199,73 +213,6 @@ class _PrototypeViewSwitcher extends StatelessWidget {
                 },
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CustomerFloatingActions extends ConsumerWidget {
-  const _CustomerFloatingActions({required this.navigationShell});
-
-  final StatefulNavigationShell navigationShell;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final cartCount = ref.watch(cartControllerProvider).length;
-
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: MediaQuery.paddingOf(context).bottom + 16,
-      child: Center(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.96),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FilledButton.icon(
-                  onPressed: () {
-                    navigationShell.goBranch(
-                      1,
-                      initialLocation: navigationShell.currentIndex == 1,
-                    );
-                  },
-                  icon: const Icon(Icons.manage_search_rounded),
-                  label: Text(l10n.customerSearchTab),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filledTonal(
-                  tooltip: l10n.cartLabel,
-                  onPressed: () {
-                    navigationShell.goBranch(
-                      3,
-                      initialLocation: navigationShell.currentIndex == 3,
-                    );
-                  },
-                  icon: Badge(
-                    isLabelVisible: cartCount > 0,
-                    label: Text('$cartCount'),
-                    child: const Icon(Icons.shopping_bag_outlined),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

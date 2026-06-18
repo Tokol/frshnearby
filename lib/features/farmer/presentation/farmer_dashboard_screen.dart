@@ -14,6 +14,7 @@ import '../../deals/domain/deal.dart';
 import '../../deals/presentation/deal_controller.dart';
 import '../../listings/domain/listing.dart';
 import '../../listings/presentation/listing_controller.dart';
+import '../../listings/presentation/listing_form_components.dart';
 
 class FarmerDashboardScreen extends ConsumerWidget {
   const FarmerDashboardScreen({super.key});
@@ -90,9 +91,9 @@ class FarmerDashboardScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            tooltip: l10n.settingsTitle,
-            onPressed: () => context.push(AppRoutes.farmerSettings),
-            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Farm wall',
+            onPressed: () => context.go(AppRoutes.farmerCommunity),
+            icon: const Icon(Icons.post_add_outlined),
           ),
           const SizedBox(width: 6),
         ],
@@ -147,13 +148,23 @@ class FarmerDashboardScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 26),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: () => context.push(AppRoutes.createListing),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(l10n.addProductButton),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Hot Sale',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton.icon(
+                onPressed: () => context.push(AppRoutes.createListing),
+                icon: const Icon(Icons.add_rounded),
+                label: Text(l10n.addProductButton),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           if (listings.isEmpty)
@@ -191,7 +202,10 @@ class FarmerDashboardScreen extends ConsumerWidget {
   }
 
   static double _stepFor(String unit) {
-    return unit.toLowerCase() == 'kg' ? 1 : 1;
+    return switch (unit.toLowerCase()) {
+      'g' || 'gm' || 'gram' || 'grams' => 100,
+      _ => 1,
+    };
   }
 
   Future<void> _adjustQuantity({
@@ -199,11 +213,16 @@ class FarmerDashboardScreen extends ConsumerWidget {
     required WidgetRef ref,
     required Listing listing,
     required double quantity,
+    String? unit,
   }) async {
     final previousQuantity = listing.quantity;
     await ref
         .read(listingControllerProvider.notifier)
-        .updateQuantity(listingId: listing.id, quantity: quantity);
+        .updateQuantity(
+          listingId: listing.id,
+          quantity: quantity,
+          unit: unit ?? listing.unit,
+        );
     if (!context.mounted) {
       return;
     }
@@ -233,71 +252,85 @@ class FarmerDashboardScreen extends ConsumerWidget {
     required Listing listing,
   }) async {
     final controller = TextEditingController();
-    final amount = await showModalBottomSheet<double>(
+    final result = await showModalBottomSheet<({double amount, String unit})>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          4,
-          20,
-          MediaQuery.viewInsetsOf(context).bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Update ${listing.title}',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+      builder: (context) {
+        var selectedUnit = listing.unit;
+        return StatefulBuilder(
+          builder: (context, setSheetState) => Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              4,
+              20,
+              MediaQuery.viewInsetsOf(context).bottom + 24,
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Currently ${_formatQuantity(listing.quantity)} ${listing.unit}. Add newly harvested or restocked quantity.',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Update ${listing.title}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Currently ${_formatQuantity(listing.quantity)} ${listing.unit}. Add newly harvested or restocked quantity.',
+                ),
+                const SizedBox(height: 18),
+                SellingUnitField(
+                  value: selectedUnit,
+                  onChanged: (unit) => setSheetState(() {
+                    selectedUnit = unit;
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).quantityToAddLabel,
+                    suffixText: selectedUnit,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      final value = double.tryParse(
+                        controller.text.trim().replaceAll(',', '.'),
+                      );
+                      final unit = selectedUnit.trim();
+                      if (value != null && value > 0 && unit.isNotEmpty) {
+                        Navigator.of(context).pop((amount: value, unit: unit));
+                      }
+                    },
+                    child: Text(AppLocalizations.of(context).addToStockLabel),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 18),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).quantityToAddLabel,
-                suffixText: listing.unit,
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () {
-                  final value = double.tryParse(
-                    controller.text.trim().replaceAll(',', '.'),
-                  );
-                  if (value != null && value > 0) {
-                    Navigator.of(context).pop(value);
-                  }
-                },
-                child: Text(AppLocalizations.of(context).addToStockLabel),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
     controller.dispose();
-    if (amount == null || !context.mounted) {
+    if (result == null || !context.mounted) {
       return;
     }
     await _adjustQuantity(
       context: context,
       ref: ref,
       listing: listing,
-      quantity: listing.quantity + amount,
+      quantity: listing.quantity + result.amount,
+      unit: result.unit,
     );
   }
 

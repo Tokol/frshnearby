@@ -33,6 +33,8 @@ import '../../features/listings/presentation/listing_preview_screen.dart';
 import '../../features/marketing/presentation/marketing_home_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shared/presentation/app_shell.dart';
+import '../../features/social_feed/domain/feed_post.dart';
+import '../../features/social_feed/presentation/social_feed_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import 'app_routes.dart';
 
@@ -158,6 +160,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: AppRoutes.customerSearch,
+        builder: (context, state) => const CustomerSearchScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.customerMessages,
+        builder: (context, state) => const CustomerMessagesScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.customerMap,
         builder: (context, state) => const CustomerMapScreen(),
       ),
@@ -180,16 +190,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.customerSearch,
-                pageBuilder: _pageBuilder(const CustomerSearchScreen()),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.customerMessages,
-                pageBuilder: _pageBuilder(const CustomerMessagesScreen()),
+                path: AppRoutes.customerCommunity,
+                pageBuilder: _pageBuilder(
+                  const SocialFeedScreen(viewerType: FeedActorType.consumer),
+                ),
               ),
             ],
           ),
@@ -248,6 +252,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.farmerCommunity,
+        builder: (context, state) => SocialFeedScreen(
+          viewerType: FeedActorType.farmer,
+          openComposer: state.uri.queryParameters['create'] == 'true',
+        ),
       ),
       GoRoute(
         path: AppRoutes.createListing,

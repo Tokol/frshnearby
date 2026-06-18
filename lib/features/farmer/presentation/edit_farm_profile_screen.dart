@@ -56,7 +56,17 @@ class _EditFarmProfileScreenState extends ConsumerState<EditFarmProfileScreen> {
     _initialize(profile);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.editFarmProfileTitle)),
+      appBar: AppBar(
+        title: Text(l10n.editFarmProfileTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.settingsTitle,
+            onPressed: () => context.push(AppRoutes.farmerSettings),
+            icon: const Icon(Icons.settings_outlined),
+          ),
+          const SizedBox(width: 6),
+        ],
+      ),
       body: Form(
         key: _formKey,
         child: ListView(

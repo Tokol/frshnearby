@@ -11,10 +11,23 @@ abstract class DealRepository {
     required String listingId,
     required String locale,
     required double quantity,
-    required String orderGroupId,
-    required FulfillmentMethod fulfillmentMethod,
-    required double deliveryFee,
+    String? orderGroupId,
+    FulfillmentMethod fulfillmentMethod = FulfillmentMethod.farmPickup,
+    double deliveryFee = 0,
     double? deliveryDistanceKm,
+  });
+
+  Future<Deal> createFeedOfferDeal({
+    required String customerId,
+    required String farmerId,
+    required String farmName,
+    required String postId,
+    required String offerId,
+    required String title,
+    required double quantity,
+    required String unit,
+    required double unitPrice,
+    required String note,
   });
 
   Future<List<ChatThread>> getThreads(String customerId);
@@ -69,9 +82,9 @@ class MockDealRepository implements DealRepository {
     required String listingId,
     required String locale,
     required double quantity,
-    required String orderGroupId,
-    required FulfillmentMethod fulfillmentMethod,
-    required double deliveryFee,
+    String? orderGroupId,
+    FulfillmentMethod fulfillmentMethod = FulfillmentMethod.farmPickup,
+    double deliveryFee = 0,
     double? deliveryDistanceKm,
   }) async {
     final listing = await _marketplace.getListing(
@@ -131,6 +144,71 @@ class MockDealRepository implements DealRepository {
       ),
     );
     return thread;
+  }
+
+  @override
+  Future<Deal> createFeedOfferDeal({
+    required String customerId,
+    required String farmerId,
+    required String farmName,
+    required String postId,
+    required String offerId,
+    required String title,
+    required double quantity,
+    required String unit,
+    required double unitPrice,
+    required String note,
+  }) async {
+    final dealId = 'feed-deal-${_deals.length + 1}';
+    final threadId = 'feed-thread-${_threads.length + 1}';
+    final now = DateTime.now();
+    final listingId = 'feed-post-$postId';
+    final thread = ChatThread(
+      id: threadId,
+      customerId: customerId,
+      farmerId: farmerId,
+      listingId: listingId,
+      dealId: dealId,
+      createdAt: now,
+    );
+    final deal = Deal(
+      id: dealId,
+      threadId: threadId,
+      customerId: customerId,
+      farmerId: farmerId,
+      listingId: listingId,
+      productId: 'feed-offer-$offerId',
+      title: title,
+      quantity: quantity,
+      unit: unit,
+      price: unitPrice,
+      status: DealStatus.confirmed,
+      createdAt: now,
+      farmName: farmName,
+      statusUpdates: [
+        DealStatusUpdate(status: DealStatus.negotiating, timestamp: now),
+        DealStatusUpdate(
+          status: DealStatus.confirmed,
+          timestamp: now,
+          note: note.trim().isEmpty
+              ? 'Paid feed offer accepted from farm wall.'
+              : note.trim(),
+        ),
+      ],
+    );
+    _threads.add(thread);
+    _deals.add(deal);
+    _messages.add(
+      ChatMessage(
+        id: 'message-${_messages.length + 1}',
+        threadId: threadId,
+        senderId: 'system',
+        senderType: ChatSenderType.customer,
+        text: 'Feed offer accepted. Payment authorized.',
+        createdAt: now,
+      ),
+    );
+    return deal;
   }
 
   @override

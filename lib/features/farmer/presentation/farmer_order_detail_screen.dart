@@ -7,6 +7,31 @@ import '../../deals/domain/deal.dart';
 import '../../deals/domain/review_rating.dart';
 import '../../deals/presentation/deal_controller.dart';
 
+Deal _paidFeedOfferOrder(Deal order) {
+  final isFeedOffer =
+      order.listingId.startsWith('feed-post-') ||
+      order.productId.startsWith('feed-offer-');
+  if (!isFeedOffer || order.status != DealStatus.negotiating) {
+    return order;
+  }
+  final hasAcceptedUpdate = order.statusUpdates.any(
+    (update) => update.status == DealStatus.confirmed,
+  );
+  return order.copyWith(
+    status: DealStatus.confirmed,
+    statusUpdates: hasAcceptedUpdate
+        ? order.statusUpdates
+        : [
+            ...order.statusUpdates,
+            DealStatusUpdate(
+              status: DealStatus.confirmed,
+              timestamp: order.createdAt,
+              note: 'Payment received from accepted feed offer.',
+            ),
+          ],
+  );
+}
+
 class FarmerOrderDetailScreen extends ConsumerWidget {
   const FarmerOrderDetailScreen({required this.orderId, super.key});
 
@@ -20,6 +45,7 @@ class FarmerOrderDetailScreen extends ConsumerWidget {
     if (order == null) {
       return Scaffold(body: Center(child: Text(l10n.orderNotFoundMessage)));
     }
+    final statusOrder = _paidFeedOfferOrder(order);
     final orderItems = orders
         .where((item) => item.orderGroupId == order.orderGroupId)
         .toList();
@@ -94,13 +120,13 @@ class FarmerOrderDetailScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           _Title(l10n.statusLabel),
           const SizedBox(height: 10),
-          _StatusTimeline(order: order),
-          if (order.status == DealStatus.completed) ...[
+          _StatusTimeline(order: statusOrder),
+          if (statusOrder.status == DealStatus.completed) ...[
             const SizedBox(height: 16),
             _FarmerReviewCard(rating: rating),
           ],
           const SizedBox(height: 24),
-          if (order.status == DealStatus.negotiating)
+          if (statusOrder.status == DealStatus.negotiating)
             Row(
               children: [
                 Expanded(
@@ -140,7 +166,7 @@ class FarmerOrderDetailScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          if (order.status == DealStatus.confirmed)
+          if (statusOrder.status == DealStatus.confirmed)
             FilledButton.icon(
               onPressed: () async {
                 final isPickup =
@@ -173,7 +199,7 @@ class FarmerOrderDetailScreen extends ConsumerWidget {
                     : 'Mark ready for courier',
               ),
             ),
-          if (order.status == DealStatus.readyForPickup)
+          if (statusOrder.status == DealStatus.readyForPickup)
             FilledButton.icon(
               onPressed: () async {
                 final result = await _showStatusNoteSheet(

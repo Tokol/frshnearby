@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
 
-const listingUnits = <String>['kg', 'piece', 'bunch', 'bag', 'box', 'jar'];
+const listingUnits = <String>['kg', 'g', 'piece', 'bunch', 'bag', 'box', 'jar'];
+
+const _customUnitValue = '__custom_unit__';
 
 class ListingSectionTitle extends StatelessWidget {
   const ListingSectionTitle(this.title, {this.description, super.key});
@@ -35,7 +37,7 @@ class ListingSectionTitle extends StatelessWidget {
   }
 }
 
-class SellingUnitField extends StatelessWidget {
+class SellingUnitField extends StatefulWidget {
   const SellingUnitField({
     required this.value,
     required this.onChanged,
@@ -46,36 +48,98 @@ class SellingUnitField extends StatelessWidget {
   final ValueChanged<String> onChanged;
 
   @override
+  State<SellingUnitField> createState() => _SellingUnitFieldState();
+}
+
+class _SellingUnitFieldState extends State<SellingUnitField> {
+  late final TextEditingController _customController;
+  late bool _customSelected;
+
+  @override
+  void initState() {
+    super.initState();
+    _customSelected =
+        widget.value.trim().isNotEmpty && !listingUnits.contains(widget.value);
+    _customController = TextEditingController(
+      text: _customSelected ? widget.value : '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(SellingUnitField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value.trim().isEmpty && _customSelected) return;
+    if (oldWidget.value == widget.value) return;
+    final custom =
+        widget.value.trim().isNotEmpty && !listingUnits.contains(widget.value);
+    _customSelected = custom;
+    if (custom && _customController.text != widget.value) {
+      _customController.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _customController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final options = listingUnits.contains(value)
-        ? listingUnits
-        : <String>[value, ...listingUnits];
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      decoration: InputDecoration(
-        labelText: l10n.sellingUnitLabel,
-        prefixIcon: const Icon(Icons.scale_outlined),
-      ),
-      items: options
-          .map(
-            (unit) => DropdownMenuItem(
-              value: unit,
-              child: Text(_unitLabel(l10n, unit)),
+    final selectedValue = _customSelected ? _customUnitValue : widget.value;
+    return Column(
+      children: [
+        DropdownButtonFormField<String>(
+          initialValue: selectedValue,
+          decoration: InputDecoration(
+            labelText: l10n.sellingUnitLabel,
+            prefixIcon: const Icon(Icons.scale_outlined),
+          ),
+          items: [
+            ...listingUnits.map(
+              (unit) => DropdownMenuItem(
+                value: unit,
+                child: Text(_unitLabel(l10n, unit)),
+              ),
             ),
-          )
-          .toList(),
-      onChanged: (unit) {
-        if (unit != null) {
-          onChanged(unit);
-        }
-      },
+            const DropdownMenuItem(
+              value: _customUnitValue,
+              child: Text('Custom unit'),
+            ),
+          ],
+          onChanged: (unit) {
+            if (unit == null) return;
+            if (unit == _customUnitValue) {
+              setState(() => _customSelected = true);
+              widget.onChanged(_customController.text.trim());
+              return;
+            }
+            setState(() => _customSelected = false);
+            widget.onChanged(unit);
+          },
+        ),
+        if (_customSelected) ...[
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _customController,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              labelText: 'Type unit',
+              hintText: 'tray, bottle, dozen...',
+              prefixIcon: Icon(Icons.edit_outlined),
+            ),
+            onChanged: (value) => widget.onChanged(value.trim()),
+          ),
+        ],
+      ],
     );
   }
 
   static String _unitLabel(AppLocalizations l10n, String unit) {
     return switch (unit) {
       'kg' => l10n.kilogramUnit,
+      'g' => 'Gram (g)',
       'piece' => l10n.pieceUnit,
       'bunch' => l10n.bunchUnit,
       'bag' => l10n.bagUnit,

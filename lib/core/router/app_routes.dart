@@ -12,6 +12,7 @@ class AppRoutes {
   static const customerMessages = '/customer/messages';
   static const customerDeals = '/customer/deals';
   static const customerProfile = '/customer/profile';
+  static const customerCommunity = '/customer/community';
   static String customerListingDetail(String listingId) =>
       '/customer/listings/$listingId';
 
@@ -33,6 +34,7 @@ class AppRoutes {
   static const createListing = '/farmer/listings/create';
   static const farmerMessages = '/farmer/messages';
   static const farmerDeals = '/farmer/deals';
+  static const farmerCommunity = '/farmer/community';
   static const farmerInsights = '/farmer/insights';
   static const farmerReviews = '/farmer/reviews';
   static const settings = '/customer/profile/settings';

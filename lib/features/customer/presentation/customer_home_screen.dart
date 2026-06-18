@@ -16,6 +16,7 @@ import '../../../core/widgets/farm_avatar.dart';
 import '../../customer_marketplace/domain/customer_listing.dart';
 import '../../customer_marketplace/presentation/customer_marketplace_controller.dart';
 import '../../listings/domain/product_detail_labels.dart';
+import '../../social_feed/presentation/social_feed_screen.dart';
 import 'followed_farms_controller.dart';
 
 class CustomerHomeScreen extends ConsumerStatefulWidget {
@@ -71,18 +72,13 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
 
             return CustomScrollView(
               slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                const SliverToBoxAdapter(child: CustomerActiveOffersStrip()),
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-                    child: _HomeHeader(
-                      locationLabel: l10n.currentLocationLabel,
-                      location: locationState.displayLocation.displayName,
-                      onProfileTap: () => context.go(AppRoutes.customerProfile),
-                      onLocationTap: () => _showLocationSearch(),
-                      onMapTap: () => context.go(AppRoutes.customerMap),
-                      onNotificationsTap: () =>
-                          context.go(AppRoutes.customerMessages),
-                    ),
+                  child: _HomeMapToggleCard(
+                    location: locationState.displayLocation.displayName,
+                    onOpenMap: () => context.go(AppRoutes.customerMap),
+                    onOpenSearch: () => context.go(AppRoutes.customerSearch),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -208,7 +204,7 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: _ListingRail(
-                    title: l10n.nearbyListingsTitle,
+                    title: 'Hot sales near you',
                     listings: items,
                     onSeeAll: () => context.go(AppRoutes.customerSearch),
                     onTap: (listing) => context.go(
@@ -370,115 +366,89 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
   }
 }
 
-class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({
-    required this.locationLabel,
+class _HomeMapToggleCard extends StatelessWidget {
+  const _HomeMapToggleCard({
     required this.location,
-    required this.onProfileTap,
-    required this.onLocationTap,
-    required this.onMapTap,
-    required this.onNotificationsTap,
+    required this.onOpenMap,
+    required this.onOpenSearch,
   });
 
-  final String locationLabel;
   final String location;
-  final VoidCallback onProfileTap;
-  final VoidCallback onLocationTap;
-  final VoidCallback onMapTap;
-  final VoidCallback onNotificationsTap;
+  final VoidCallback onOpenMap;
+  final VoidCallback onOpenSearch;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _RoundHeaderButton(
-              tooltip: AppLocalizations.of(context).profileTitle,
-              icon: Icons.person_outline,
-              onPressed: onProfileTap,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: onLocationTap,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          location,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.expand_more, size: 20),
-                    ],
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    location,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
-              ),
+                SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 0,
+                      icon: Icon(Icons.view_agenda_outlined, size: 18),
+                      label: Text('List'),
+                    ),
+                    ButtonSegment(
+                      value: 1,
+                      icon: Icon(Icons.map_outlined, size: 18),
+                      label: Text('Map'),
+                    ),
+                  ],
+                  selected: const {0},
+                  showSelectedIcon: false,
+                  style: const ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onSelectionChanged: (value) {
+                    if (value.first == 1) onOpenMap();
+                  },
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            _RoundHeaderButton(
-              tooltip: AppLocalizations.of(context).nearbyMapTooltip,
-              icon: Icons.map_outlined,
-              onPressed: onMapTap,
-            ),
-            const SizedBox(width: 8),
-            _RoundHeaderButton(
-              tooltip: locationLabel,
-              icon: Icons.notifications_none_rounded,
-              onPressed: onNotificationsTap,
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Browse nearby farms as cards, or switch to the map when distance matters.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                TextButton.icon(
+                  onPressed: onOpenSearch,
+                  icon: const Icon(Icons.search_rounded),
+                  label: const Text('Browse'),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
-    );
-  }
-}
-
-class _RoundHeaderButton extends StatelessWidget {
-  const _RoundHeaderButton({
-    required this.tooltip,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onPressed,
-        child: Ink(
-          height: 56,
-          width: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: theme.colorScheme.surfaceContainerHighest,
-          ),
-          child: Icon(icon, color: theme.colorScheme.onSurface),
         ),
       ),
     );

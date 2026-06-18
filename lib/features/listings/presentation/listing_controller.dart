@@ -118,6 +118,7 @@ class ListingController extends StateNotifier<ListingState> {
   Future<Listing> updateQuantity({
     required String listingId,
     required double quantity,
+    String? unit,
   }) async {
     final listing = listingById(listingId);
     if (listing == null) {
@@ -129,7 +130,11 @@ class ListingController extends StateNotifier<ListingState> {
         ? ListingStatus.soldOut
         : ListingStatus.active;
     final updated = await updateListing(
-      listing.copyWith(quantity: safeQuantity, status: status),
+      listing.copyWith(
+        quantity: safeQuantity,
+        unit: unit == null || unit.trim().isEmpty ? listing.unit : unit.trim(),
+        status: status,
+      ),
     );
 
     return updated;

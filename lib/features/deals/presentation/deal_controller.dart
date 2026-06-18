@@ -112,6 +112,40 @@ class DealController extends StateNotifier<DealState> {
     return thread;
   }
 
+  Future<Deal> createFeedOfferDeal({
+    required String farmerId,
+    required String farmName,
+    required String postId,
+    required String offerId,
+    required String title,
+    required double quantity,
+    required String unit,
+    required double unitPrice,
+    required String note,
+  }) async {
+    final customerId = _customerId;
+    if (customerId == null) {
+      throw StateError('Customer is required.');
+    }
+    final deal = await _ref
+        .read(dealRepositoryProvider)
+        .createFeedOfferDeal(
+          customerId: customerId,
+          farmerId: farmerId,
+          farmName: farmName,
+          postId: postId,
+          offerId: offerId,
+          title: title,
+          quantity: quantity,
+          unit: unit,
+          unitPrice: unitPrice,
+          note: note,
+        );
+    await loadDeals();
+    _ref.invalidate(farmerDealsProvider);
+    return deal;
+  }
+
   Future<void> sendMessage({
     required String threadId,
     required String text,
