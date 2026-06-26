@@ -273,10 +273,7 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         }
       }
       if (focusPost != null) {
-        posts = [
-          focusPost,
-          ...posts.where((post) => post.id != focusPostId),
-        ];
+        posts = [focusPost, ...posts.where((post) => post.id != focusPostId)];
       }
     }
     if (isFarmer && widget.focusPostId != null) {
@@ -304,6 +301,17 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         length: 2,
         child: Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              tooltip: 'Back to consumer',
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go(AppRoutes.customerHome);
+                }
+              },
+              icon: const Icon(Icons.arrow_back_rounded),
+            ),
             title: const Text('Feed'),
             bottom: const TabBar(
               tabs: [

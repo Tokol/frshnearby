@@ -327,7 +327,7 @@ class _FarmerPublicProfileScreenState
                             Row(
                               children: [
                                 Text(
-                                  'Shop',
+                                  'Hot sales',
                                   style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(fontWeight: FontWeight.w900),
                                 ),
@@ -582,17 +582,17 @@ class _FarmProfileTabs extends StatelessWidget {
         ButtonSegment(
           value: 0,
           icon: Icon(Icons.storefront_outlined),
-          label: Text('Shop'),
+          label: Text('Hot sales'),
         ),
         ButtonSegment(
           value: 1,
           icon: Icon(Icons.dynamic_feed_outlined),
-          label: Text('Wall'),
+          label: Text('Feed'),
         ),
         ButtonSegment(
           value: 2,
           icon: Icon(Icons.info_outline_rounded),
-          label: Text('About'),
+          label: Text('Info'),
         ),
       ],
       selected: {selected},
@@ -620,7 +620,7 @@ class _FarmWallSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Farm wall',
+          'Farm feed',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w900,
           ),
@@ -637,9 +637,8 @@ class _FarmWallSection extends StatelessWidget {
               ),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
-                onTap: () => context.push(
-                  AppRoutes.customerCommunityPost(post.id),
-                ),
+                onTap: () =>
+                    context.push(AppRoutes.customerCommunityPost(post.id)),
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Column(

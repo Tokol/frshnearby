@@ -297,6 +297,14 @@ class _FarmMapPreviewSheetState extends ConsumerState<_FarmMapPreviewSheet> {
     (sum, sale) => sum + sale.listing!.listing.price * _quantityFor(sale),
   );
 
+  String get _farmPageFarmerId {
+    for (final sale in widget.farm.hotSales) {
+      final listing = sale.listing;
+      if (listing != null) return listing.farmer.id;
+    }
+    return widget.farm.farmer.id;
+  }
+
   void _addSelectionToCart() {
     final selectedSales = _selectedSales;
     if (selectedSales.isEmpty) return;
@@ -442,16 +450,10 @@ class _FarmMapPreviewSheetState extends ConsumerState<_FarmMapPreviewSheet> {
               FilledButton.icon(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  if (farm.isEmulated) {
-                    context.go(AppRoutes.customerSearch);
-                  } else {
-                    context.go(AppRoutes.farmerPublicProfile(farm.farmer.id));
-                  }
+                  context.go(AppRoutes.farmerPublicProfile(_farmPageFarmerId));
                 },
                 icon: const Icon(Icons.storefront_outlined),
-                label: Text(
-                  farm.isEmulated ? l10n.seeAllButton : l10n.openFarmLabel,
-                ),
+                label: Text(farm.isEmulated ? 'View farm' : l10n.openFarmLabel),
               ),
             ],
           ),
@@ -613,7 +615,11 @@ class _MapOrderSummary extends StatelessWidget {
                 ],
               ),
             ),
-            FilledButton(onPressed: onAdd, child: const Text('Add selected')),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_shopping_cart_rounded),
+              label: const Text('Add to cart'),
+            ),
           ],
         ),
       ),
