@@ -74,6 +74,11 @@ class AppShell extends ConsumerWidget {
     final orderBadgeCount = cartCount + offerCount + activeOrderCount;
 
     return [
+      const NavigationDestination(
+        icon: Icon(Icons.map_outlined),
+        selectedIcon: Icon(Icons.map_rounded),
+        label: 'Explore',
+      ),
       NavigationDestination(
         icon: const Icon(Icons.home_outlined),
         selectedIcon: const Icon(Icons.home),

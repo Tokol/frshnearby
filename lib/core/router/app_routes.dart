@@ -13,6 +13,8 @@ class AppRoutes {
   static const customerDeals = '/customer/deals';
   static const customerProfile = '/customer/profile';
   static const customerCommunity = '/customer/community';
+  static String customerCommunityPost(String postId) =>
+      '$customerCommunity?post=$postId';
   static String customerListingDetail(String listingId) =>
       '/customer/listings/$listingId';
 

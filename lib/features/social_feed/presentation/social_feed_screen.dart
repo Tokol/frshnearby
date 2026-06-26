@@ -263,6 +263,22 @@ class _SocialFeedScreenState extends ConsumerState<SocialFeedScreen> {
         : state.posts
               .where((post) => followedFarmIds.contains(post.authorId))
               .toList();
+    if (!isFarmer && widget.focusPostId != null) {
+      final focusPostId = widget.focusPostId!;
+      FeedPost? focusPost;
+      for (final post in state.posts) {
+        if (post.id == focusPostId) {
+          focusPost = post;
+          break;
+        }
+      }
+      if (focusPost != null) {
+        posts = [
+          focusPost,
+          ...posts.where((post) => post.id != focusPostId),
+        ];
+      }
+    }
     if (isFarmer && widget.focusPostId != null) {
       final focusPostId = widget.focusPostId!;
       posts = [

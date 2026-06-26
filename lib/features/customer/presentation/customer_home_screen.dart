@@ -69,13 +69,6 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
                 const SliverToBoxAdapter(child: CustomerActiveOffersStrip()),
                 SliverToBoxAdapter(
-                  child: _HomeMapToggleCard(
-                    location: locationState.displayLocation.displayName,
-                    onOpenMap: () => context.go(AppRoutes.customerMap),
-                    onOpenSearch: () => context.go(AppRoutes.customerSearch),
-                  ),
-                ),
-                SliverToBoxAdapter(
                   child: _HorizontalCategorySection(
                     categories: [
                       _HomeCategory(
@@ -401,95 +394,6 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
           farmerListings: farmerListings,
         );
       },
-    );
-  }
-}
-
-class _HomeMapToggleCard extends StatelessWidget {
-  const _HomeMapToggleCard({
-    required this.location,
-    required this.onOpenMap,
-    required this.onOpenSearch,
-  });
-
-  final String location;
-  final VoidCallback onOpenMap;
-  final VoidCallback onOpenSearch;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    location,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                SegmentedButton<int>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 0,
-                      icon: Icon(Icons.view_agenda_outlined, size: 18),
-                      label: Text('List'),
-                    ),
-                    ButtonSegment(
-                      value: 1,
-                      icon: Icon(Icons.map_outlined, size: 18),
-                      label: Text('Map'),
-                    ),
-                  ],
-                  selected: const {0},
-                  showSelectedIcon: false,
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onSelectionChanged: (value) {
-                    if (value.first == 1) onOpenMap();
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Browse nearby farms as cards, or switch to the map when distance matters.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                TextButton.icon(
-                  onPressed: onOpenSearch,
-                  icon: const Icon(Icons.search_rounded),
-                  label: const Text('Browse'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -1137,14 +1041,17 @@ class _HotSaleBuyingSheet extends ConsumerStatefulWidget {
 }
 
 class _HotSaleBuyingSheetState extends ConsumerState<_HotSaleBuyingSheet> {
-  late double _quantity;
+  late Map<String, double> _quantities;
 
   @override
   void initState() {
     super.initState();
-    _quantity = widget.listing.listing.quantity < 1
-        ? widget.listing.listing.quantity
-        : 1;
+    _quantities = {
+      widget.listing.listing.id: widget.listing.listing.quantity < 1
+          ? widget.listing.listing.quantity
+          : 1,
+      for (final item in widget.farmerListings) item.listing.id: 0,
+    };
   }
 
   @override
@@ -1157,7 +1064,15 @@ class _HotSaleBuyingSheetState extends ConsumerState<_HotSaleBuyingSheet> {
     final productName = variantName ?? listing.productName(locale);
     final detailLabels = productDetailLabels(listing.listing.categoryId);
     final date = listing.listing.harvestDate;
-    final total = listing.listing.price * _quantity;
+    final basketLines = _basketLines;
+    final total = basketLines.fold<double>(
+      0,
+      (sum, item) => sum + item.listing.price * _quantityFor(item),
+    );
+    final selectedCount = basketLines.fold<int>(
+      0,
+      (sum, item) => sum + (_quantityFor(item) > 0 ? 1 : 0),
+    );
 
     return DraggableScrollableSheet(
       expand: false,
@@ -1287,65 +1202,35 @@ class _HotSaleBuyingSheetState extends ConsumerState<_HotSaleBuyingSheet> {
                 label: 'Pickup',
                 value: listing.listing.pickupNotes!,
               ),
-            const SizedBox(height: 12),
-            _QuantityStepper(
-              quantity: _quantity,
-              unit: listing.listing.unit,
-              max: listing.listing.quantity,
-              onChanged: (value) => setState(() => _quantity = value),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      final messenger = ScaffoldMessenger.of(context);
-                      final router = GoRouter.of(context);
-                      ref
-                          .read(cartControllerProvider.notifier)
-                          .add(listing, _quantity);
-                      Navigator.of(context).pop();
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '$productName added to basket (${_formatQuantity(_quantity)} ${listing.listing.unit})',
-                          ),
-                          action: SnackBarAction(
-                            label: 'Basket',
-                            onPressed: () => router.go(AppRoutes.customerDeals),
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add_shopping_cart_rounded),
-                    label: Text('Add ${total.toStringAsFixed(2)}'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton.filledTonal(
-                  tooltip: l10n.listingDetailTitle,
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.go(
-                      AppRoutes.customerListingDetail(listing.listing.id),
-                    );
-                  },
-                  icon: const Icon(Icons.open_in_new_rounded),
-                ),
-              ],
+            const SizedBox(height: 16),
+            _UnifiedFarmBasketPanel(
+              farmName: listing.farmer.farmName,
+              lines: basketLines,
+              quantities: _quantities,
+              assetForListing: _assetForListing,
+              onChanged: _setQuantity,
             ),
             if (widget.farmerListings.isNotEmpty) ...[
               const SizedBox(height: 24),
-              Text(
-                'More from ${listing.farmer.farmName}',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Complete this farm order',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  _SheetPill(
+                    icon: Icons.shopping_basket_outlined,
+                    label: '$selectedCount selected',
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 168,
+                height: 184,
                 child: ListView.separated(
                   primary: false,
                   scrollDirection: Axis.horizontal,
@@ -1355,25 +1240,64 @@ class _HotSaleBuyingSheetState extends ConsumerState<_HotSaleBuyingSheet> {
                     final item = widget.farmerListings[index];
                     return _FarmerShelfItem(
                       listing: item,
-                      onTap: () {
-                        ref.read(cartControllerProvider.notifier).add(item, 1);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${item.variantName(locale) ?? item.productName(locale)} added to basket',
-                            ),
-                          ),
-                        );
-                      },
+                      quantity: _quantityFor(item),
+                      imagePath: _assetForListing(item),
+                      onChanged: (value) => _setQuantity(item, value),
                     );
                   },
                 ),
               ),
             ],
+            const SizedBox(height: 20),
+            _CheckoutSummaryBar(
+              selectedCount: selectedCount,
+              total: total,
+              onAddAll: selectedCount == 0
+                  ? null
+                  : () {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final router = GoRouter.of(context);
+                      final cart = ref.read(cartControllerProvider.notifier);
+                      for (final item in basketLines) {
+                        final quantity = _quantityFor(item);
+                        if (quantity > 0) {
+                          cart.add(item, quantity);
+                        }
+                      }
+                      Navigator.of(context).pop();
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '$selectedCount farm item${selectedCount == 1 ? '' : 's'} added to basket',
+                          ),
+                          action: SnackBarAction(
+                            label: 'Basket',
+                            onPressed: () => router.go(AppRoutes.customerDeals),
+                          ),
+                        ),
+                      );
+                    },
+            ),
           ],
         );
       },
     );
+  }
+
+  List<CustomerListing> get _basketLines => [
+    widget.listing,
+    ...widget.farmerListings,
+  ];
+
+  double _quantityFor(CustomerListing listing) =>
+      _quantities[listing.listing.id] ?? 0;
+
+  void _setQuantity(CustomerListing listing, double value) {
+    final min = listing.listing.id == widget.listing.listing.id ? 1.0 : 0.0;
+    final safeValue = value.clamp(min, listing.listing.quantity).toDouble();
+    setState(() {
+      _quantities = {..._quantities, listing.listing.id: safeValue};
+    });
   }
 
   String _assetForListing(CustomerListing listing) {
@@ -1468,64 +1392,224 @@ class _FarmerBuyingPanel extends StatelessWidget {
   }
 }
 
-class _QuantityStepper extends StatelessWidget {
-  const _QuantityStepper({
+class _UnifiedFarmBasketPanel extends StatelessWidget {
+  const _UnifiedFarmBasketPanel({
+    required this.farmName,
+    required this.lines,
+    required this.quantities,
+    required this.assetForListing,
+    required this.onChanged,
+  });
+
+  final String farmName;
+  final List<CustomerListing> lines;
+  final Map<String, double> quantities;
+  final String Function(CustomerListing listing) assetForListing;
+  final void Function(CustomerListing listing, double value) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final selectedLines = lines
+        .where((item) => (quantities[item.listing.id] ?? 0) > 0)
+        .toList();
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.shopping_basket_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Your $farmName basket',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (selectedLines.isEmpty)
+              Text(
+                'Choose quantities once, then add the whole farm order together.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              )
+            else
+              ...selectedLines.map((item) {
+                final quantity = quantities[item.listing.id] ?? 0;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _FarmBasketLine(
+                    listing: item,
+                    quantity: quantity,
+                    imagePath: assetForListing(item),
+                    canRemove: item != lines.first,
+                    onChanged: (value) => onChanged(item, value),
+                  ),
+                );
+              }),
+            const SizedBox(height: 2),
+            Text(
+              'One checkout, one pickup conversation, one farmer relationship.',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FarmBasketLine extends StatelessWidget {
+  const _FarmBasketLine({
+    required this.listing,
     required this.quantity,
-    required this.unit,
+    required this.imagePath,
+    required this.canRemove,
+    required this.onChanged,
+  });
+
+  final CustomerListing listing;
+  final double quantity;
+  final String imagePath;
+  final bool canRemove;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
+    final title = listing.variantName(locale) ?? listing.productName(locale);
+    final lineTotal = listing.listing.price * quantity;
+    final isAtLimit = quantity >= listing.listing.quantity;
+
+    return Row(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox.square(
+            dimension: 52,
+            child: _HomeImage(assetPath: imagePath),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${_formatQuantity(quantity)} of ${_formatQuantity(listing.listing.quantity)} ${listing.listing.unit} · ${lineTotal.toStringAsFixed(2)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isAtLimit
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: isAtLimit ? FontWeight.w800 : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+        _MiniQuantityStepper(
+          quantity: quantity,
+          min: canRemove ? 0 : 1,
+          max: listing.listing.quantity,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniQuantityStepper extends StatelessWidget {
+  const _MiniQuantityStepper({
+    required this.quantity,
+    required this.min,
     required this.max,
     required this.onChanged,
   });
 
   final double quantity;
-  final String unit;
+  final double min;
   final double max;
   final ValueChanged<double> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final canDecrease = quantity > 1;
+    final canDecrease = quantity > min;
     final canIncrease = quantity < max;
+    final limitLabel = quantity >= max
+        ? 'Maximum ${_formatQuantity(max)} selected'
+        : 'Increase up to ${_formatQuantity(max)}';
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Quantity',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Decrease',
+            visualDensity: VisualDensity.compact,
+            iconSize: 18,
+            onPressed: canDecrease
+                ? () => onChanged((quantity - 1).clamp(min, max).toDouble())
+                : null,
+            icon: const Icon(Icons.remove_rounded),
+          ),
+          SizedBox(
+            width: 28,
+            child: Text(
+              _formatQuantity(quantity),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w900,
               ),
             ),
-            IconButton(
-              tooltip: 'Decrease',
-              onPressed: canDecrease ? () => onChanged(quantity - 1) : null,
-              icon: const Icon(Icons.remove_rounded),
-            ),
-            SizedBox(
-              width: 88,
-              child: Text(
-                '${_formatQuantity(quantity)} $unit',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            IconButton(
-              tooltip: 'Increase',
-              onPressed: canIncrease ? () => onChanged(quantity + 1) : null,
-              icon: const Icon(Icons.add_rounded),
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            tooltip: limitLabel,
+            visualDensity: VisualDensity.compact,
+            iconSize: 18,
+            onPressed: canIncrease
+                ? () => onChanged((quantity + 1).clamp(min, max).toDouble())
+                : null,
+            icon: const Icon(Icons.add_rounded),
+          ),
+        ],
       ),
     );
   }
@@ -1624,11 +1708,86 @@ class _SheetPill extends StatelessWidget {
   }
 }
 
+class _CheckoutSummaryBar extends StatelessWidget {
+  const _CheckoutSummaryBar({
+    required this.selectedCount,
+    required this.total,
+    required this.onAddAll,
+  });
+
+  final int selectedCount;
+  final double total;
+  final VoidCallback? onAddAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    selectedCount == 0
+                        ? 'No items selected'
+                        : '$selectedCount selected',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    total.toStringAsFixed(2),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            FilledButton.icon(
+              onPressed: onAddAll,
+              icon: const Icon(Icons.add_shopping_cart_rounded),
+              label: const Text('Add all'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _FarmerShelfItem extends StatelessWidget {
-  const _FarmerShelfItem({required this.listing, required this.onTap});
+  const _FarmerShelfItem({
+    required this.listing,
+    required this.quantity,
+    required this.imagePath,
+    required this.onChanged,
+  });
 
   final CustomerListing listing;
-  final VoidCallback onTap;
+  final double quantity;
+  final String imagePath;
+  final ValueChanged<double> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1652,10 +1811,7 @@ class _FarmerShelfItem extends StatelessWidget {
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: _HomeImage(
-                    assetPath: _assetForShelfListing(listing),
-                    fit: BoxFit.cover,
-                  ),
+                  child: _HomeImage(assetPath: imagePath, fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(height: 8),
@@ -1668,50 +1824,40 @@ class _FarmerShelfItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${listing.listing.price.toStringAsFixed(2)} / ${listing.listing.unit}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  IconButton.filledTonal(
-                    tooltip: 'Add to basket',
-                    iconSize: 17,
-                    visualDensity: VisualDensity.compact,
-                    onPressed: onTap,
-                    icon: const Icon(Icons.add_rounded),
-                  ),
-                ],
+              Text(
+                '${listing.listing.price.toStringAsFixed(2)} / ${listing.listing.unit}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${_formatQuantity(listing.listing.quantity)} ${listing.listing.unit} available',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: quantity >= listing.listing.quantity
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Center(
+                child: _MiniQuantityStepper(
+                  quantity: quantity,
+                  min: 0,
+                  max: listing.listing.quantity,
+                  onChanged: onChanged,
+                ),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  String _assetForShelfListing(CustomerListing listing) {
-    switch (listing.listing.productId) {
-      case 'product-egg':
-        return 'assets/images/home/eggs.png';
-      case 'product-honey':
-        return 'assets/images/home/honey_jar.png';
-      case 'product-tomato':
-        return 'assets/images/home/tomatoes.png';
-      case 'product-potato':
-        return 'assets/images/home/potatoes.png';
-      case 'product-lamb':
-      case 'product-beef':
-        return 'assets/images/home/meat_hot_sale.png';
-      default:
-        return 'assets/images/home/vegetables.png';
-    }
   }
 }
 

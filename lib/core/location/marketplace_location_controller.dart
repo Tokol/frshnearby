@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/app_providers.dart';
@@ -124,23 +126,33 @@ class MarketplaceLocationController
         isInitializing: false,
         hasAskedForConfirmation: true,
       );
+      unawaited(_refreshDetectedLocation());
       return;
     }
 
+    await _refreshDetectedLocation(markInitialized: true);
+  }
+
+  Future<void> _refreshDetectedLocation({bool markInitialized = false}) async {
     try {
       final hasPermission = await _locationService.requestLocationPermission();
       if (!hasPermission) {
-        state = state.copyWith(isInitializing: false);
+        if (markInitialized) {
+          state = state.copyWith(isInitializing: false);
+        }
         return;
       }
 
       final result = await _locationService.getCurrentLocation();
       state = state.copyWith(
         detectedLocation: MarketplaceLocation.fromLocationResult(result),
-        isInitializing: false,
+        selectedLocation: MarketplaceLocation.fromLocationResult(result),
+        isInitializing: markInitialized ? false : state.isInitializing,
       );
     } catch (_) {
-      state = state.copyWith(isInitializing: false);
+      if (markInitialized) {
+        state = state.copyWith(isInitializing: false);
+      }
     }
   }
 

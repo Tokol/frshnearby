@@ -167,10 +167,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.customerMessages,
         builder: (context, state) => const CustomerMessagesScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.customerMap,
-        builder: (context, state) => const CustomerMapScreen(),
-      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppShell(
@@ -179,6 +175,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
         branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.customerMap,
+                pageBuilder: _pageBuilder(const CustomerMapScreen()),
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -191,8 +195,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.customerCommunity,
-                pageBuilder: _pageBuilder(
-                  const SocialFeedScreen(viewerType: FeedActorType.consumer),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: SocialFeedScreen(
+                    viewerType: FeedActorType.consumer,
+                    focusPostId: state.uri.queryParameters['post'],
+                    focusCommentId: state.uri.queryParameters['comment'],
+                  ),
                 ),
               ),
             ],

@@ -5,7 +5,7 @@ import '../../features/catalog/data/catalog_repository.dart';
 import '../../features/customer_marketplace/data/customer_marketplace_repository.dart';
 import '../../features/deals/data/deal_repository.dart';
 import '../../features/listings/data/listing_repository.dart';
-import '../location/location_service.dart';
+import '../location/device_location_service.dart';
 import '../network/api_client.dart';
 import '../storage/local_storage_service.dart';
 
