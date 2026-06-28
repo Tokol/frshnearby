@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
@@ -165,7 +164,7 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
                 ),
                 Positioned(
                   right: 16,
-                  bottom: (_carouselMode && farms.isNotEmpty) ? 196 : 24,
+                  bottom: (_carouselMode && farms.isNotEmpty) ? 212 : 24,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -204,6 +203,7 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
                       followed: followed,
                       onPageChanged: (index) => _onCarouselPage(farms, index),
                       onCardTap: (farm) => _openFarm(farm),
+                      onProductTap: _openProduct,
                       onToggleFollow: (farm) => ref
                           .read(followedFarmsProvider.notifier)
                           .toggle(farm.farmer.id),
@@ -263,7 +263,7 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
   void _recenter(MarketplaceLocation location) {
     _mapController.move(
       LatLng(location.latitude, location.longitude),
-      13,
+      14.5,
     );
   }
 
@@ -278,6 +278,13 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
       listing: farmListings.first,
       farmerListings: farmListings.skip(1).toList(),
     );
+  }
+
+  void _openProduct(_FarmMapMarker farm, CustomerListing listing) {
+    final others = farm.listings
+        .where((item) => item.listing.id != listing.listing.id)
+        .toList();
+    showFarmBuyingSheet(context, listing: listing, farmerListings: others);
   }
 
   List<_FarmMapMarker> _buildFarms(
@@ -435,7 +442,7 @@ class _OpenFarmMap extends StatelessWidget {
       mapController: controller,
       options: MapOptions(
         initialCenter: center,
-        initialZoom: 13.0,
+        initialZoom: 14.5,
         minZoom: 3,
         maxZoom: 18,
         interactionOptions: const InteractionOptions(
@@ -466,15 +473,11 @@ class _OpenFarmMap extends StatelessWidget {
             ),
           ],
         ),
-        MarkerClusterLayerWidget(
-          options: MarkerClusterLayerOptions(
-            maxClusterRadius: 46,
-            size: const Size(44, 44),
-            markerChildBehavior: true,
-            padding: const EdgeInsets.all(60),
-            maxZoom: 16,
-            markers: [
-              for (final farm in farms)
+        MarkerLayer(
+          markers: [
+            // The selected farm renders last so it sits on top of its neighbours.
+            for (final farm in farms)
+              if (farm.farmer.id != selectedFarmId)
                 Marker(
                   point: farm.position,
                   width: 120,
@@ -482,18 +485,23 @@ class _OpenFarmMap extends StatelessWidget {
                   alignment: Alignment.bottomCenter,
                   child: _FarmStickerMarker(
                     farm: farm,
-                    selected: farm.farmer.id == selectedFarmId,
+                    selected: false,
                     onTap: () => onFarmTap(farm),
                   ),
                 ),
-            ],
-            builder: (context, markers) {
-              return _ClusterBubble(count: markers.length);
-            },
-          ),
-        ),
-        MarkerLayer(
-          markers: [
+            for (final farm in farms)
+              if (farm.farmer.id == selectedFarmId)
+                Marker(
+                  point: farm.position,
+                  width: 120,
+                  height: 110,
+                  alignment: Alignment.bottomCenter,
+                  child: _FarmStickerMarker(
+                    farm: farm,
+                    selected: true,
+                    onTap: () => onFarmTap(farm),
+                  ),
+                ),
             Marker(
               point: center,
               width: 150,
@@ -506,39 +514,6 @@ class _OpenFarmMap extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _ClusterBubble extends StatelessWidget {
-  const _ClusterBubble({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: theme.colorScheme.primary,
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.20),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        '$count',
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.onPrimary,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
     );
   }
 }
@@ -1061,6 +1036,7 @@ class _FarmCarousel extends StatelessWidget {
     required this.followed,
     required this.onPageChanged,
     required this.onCardTap,
+    required this.onProductTap,
     required this.onToggleFollow,
   });
 
@@ -1069,13 +1045,14 @@ class _FarmCarousel extends StatelessWidget {
   final Set<String> followed;
   final ValueChanged<int> onPageChanged;
   final ValueChanged<_FarmMapMarker> onCardTap;
+  final void Function(_FarmMapMarker farm, CustomerListing listing) onProductTap;
   final ValueChanged<_FarmMapMarker> onToggleFollow;
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     return SizedBox(
-      height: 172 + bottomInset,
+      height: 196 + bottomInset,
       child: PageView.builder(
         controller: controller,
         onPageChanged: onPageChanged,
@@ -1089,6 +1066,7 @@ class _FarmCarousel extends StatelessWidget {
               farm: farm,
               followed: followed.contains(farm.farmer.id),
               onTap: () => onCardTap(farm),
+              onProductTap: (listing) => onProductTap(farm, listing),
               onToggleFollow: () => onToggleFollow(farm),
             ),
           );
@@ -1103,21 +1081,25 @@ class _FarmCard extends StatelessWidget {
     required this.farm,
     required this.followed,
     required this.onTap,
+    required this.onProductTap,
     required this.onToggleFollow,
   });
 
   final _FarmMapMarker farm;
   final bool followed;
   final VoidCallback onTap;
+  final ValueChanged<CustomerListing> onProductTap;
   final VoidCallback onToggleFollow;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final topName = farm.listings.isEmpty
-        ? null
-        : (farm.listings.first.variantName(farm.locale) ??
-              farm.listings.first.productName(farm.locale));
+    final listings = farm.listings;
+    // Show up to 4 slots; if there are more, the last slot is a "+N" overflow.
+    final hasOverflow = listings.length > 4;
+    final shownCount = hasOverflow ? 3 : listings.length;
+    final shown = listings.take(shownCount).toList();
+    final overflow = listings.length - shownCount;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -1128,136 +1110,221 @@ class _FarmCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: SizedBox(
-                  width: 96,
-                  height: 110,
-                  child: farm.listings.isEmpty
-                      ? const ColoredBox(color: Color(0x11000000))
-                      : FarmListingImage(
-                          assetPath: farmListingAsset(farm.listings.first),
+              Row(
+                children: [
+                  FarmAvatar(
+                    farmName: farm.farmer.farmName,
+                    radius: 18,
+                    photo: farm.farmer.profilePhotoPlaceholder,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          farm.farmer.farmName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
-                ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              farm.farmer.reviewCount == 0
+                                  ? 'New'
+                                  : farm.farmer.rating.toStringAsFixed(1),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.near_me_outlined,
+                              size: 13,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '${farm.distanceKm.toStringAsFixed(1)} km',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (farm.hasDelivery) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.local_shipping_outlined,
+                                size: 14,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ],
+                            if (farm.isEmulated) ...[
+                              const SizedBox(width: 6),
+                              _MiniTag(label: 'Sample'),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  InkResponse(
+                    onTap: onToggleFollow,
+                    radius: 22,
+                    child: Icon(
+                      followed
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      size: 22,
+                      color: followed
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            farm.farmer.farmName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        InkResponse(
-                          onTap: onToggleFollow,
-                          radius: 22,
-                          child: Icon(
-                            followed
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            size: 22,
-                            color: followed
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.star_rounded,
-                          size: 16,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          farm.farmer.reviewCount == 0
-                              ? 'New'
-                              : farm.farmer.rating.toStringAsFixed(1),
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Icon(
-                          Icons.near_me_outlined,
-                          size: 15,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${farm.distanceKm.toStringAsFixed(1)} km',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        if (farm.isEmulated) ...[
-                          const SizedBox(width: 8),
-                          _MiniTag(label: 'Sample'),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    if (topName != null)
-                      Text(
-                        '${farm.listings.length} item${farm.listings.length == 1 ? '' : 's'} · from ${farm.minPrice.toStringAsFixed(2)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < shown.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    Expanded(
+                      child: _ProductThumb(
+                        listing: shown[i],
+                        locale: farm.locale,
+                        onTap: () => onProductTap(shown[i]),
                       ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        if (farm.hasDelivery)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: Icon(
-                              Icons.local_shipping_outlined,
-                              size: 16,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        Expanded(
-                          child: Text(
-                            topName == null ? 'View farm' : 'Tap to buy fresh',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ],
                     ),
                   ],
-                ),
+                  if (hasOverflow) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _MoreThumb(count: overflow, onTap: onTap),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ProductThumb extends StatelessWidget {
+  const _ProductThumb({
+    required this.listing,
+    required this.locale,
+    required this.onTap,
+  });
+
+  final CustomerListing listing;
+  final String locale;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final name = listing.variantName(locale) ?? listing.productName(locale);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: FarmListingImage(assetPath: farmListingAsset(listing)),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            '${listing.listing.price.toStringAsFixed(2)}/${listing.listing.unit}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MoreThumb extends StatelessWidget {
+  const _MoreThumb({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AspectRatio(
+            aspectRatio: 1,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  '+$count',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'more',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
