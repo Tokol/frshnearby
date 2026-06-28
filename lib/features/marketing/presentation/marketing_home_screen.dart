@@ -8,914 +8,301 @@ class MarketingHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isWide = width >= 860;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFCF6),
-      body: SelectionArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              pinned: true,
-              elevation: 0,
-              backgroundColor: const Color(0xEEFBFCF6),
-              title: const _BrandMark(),
-              actions: [
-                _HeaderActions(
-                  onOpenPrototype: () => context.go(AppRoutes.prototype),
-                ),
-              ],
-            ),
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1180),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 26, 22, 70),
-                    child: Column(
+      backgroundColor: const Color(0xFFF7F8F1),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1120),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+              child: isWide
+                  ? Row(
                       children: [
-                        _HeroSection(theme: theme),
-                        const SizedBox(height: 72),
-                        const _SectionIntro(
-                          eyebrow: 'Who we are',
-                          title: 'A calmer way to buy food from nearby people.',
-                          body:
-                              'FreshNearby is a local marketplace concept for farmers, small producers, and customers who want fresh food without messy messaging, hidden stock, or unclear pickup steps.',
-                        ),
-                        const SizedBox(height: 28),
-                        const _ValueGrid(),
-                        const SizedBox(height: 78),
-                        const _HowItWorksSection(),
-                        const SizedBox(height: 78),
-                        _PrototypeSection(
-                          onOpenPrototype: () =>
-                              context.go(AppRoutes.prototype),
-                          onOpenCustomer: () => context.go(
-                            AppRoutes.farmerPublicProfile('farmer-1'),
+                        Expanded(
+                          flex: 11,
+                          child: _RolePanel(
+                            onFarmer: () =>
+                                context.go(AppRoutes.farmerDashboard),
+                            onConsumer: () =>
+                                context.go(AppRoutes.customerHome),
                           ),
                         ),
-                        const SizedBox(height: 78),
-                        const _RoadmapSection(),
-                        const SizedBox(height: 54),
-                        const _Footer(),
+                        const SizedBox(width: 22),
+                        const Expanded(flex: 10, child: _PreviewPanel()),
+                      ],
+                    )
+                  : ListView(
+                      children: [
+                        _RolePanel(
+                          onFarmer: () => context.go(AppRoutes.farmerDashboard),
+                          onConsumer: () => context.go(AppRoutes.customerHome),
+                        ),
+                        const SizedBox(height: 18),
+                        const _PreviewPanel(),
                       ],
                     ),
-                  ),
-                ),
-              ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
+class _RolePanel extends StatelessWidget {
+  const _RolePanel({required this.onFarmer, required this.onConsumer});
+
+  final VoidCallback onFarmer;
+  final VoidCallback onConsumer;
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 380;
-    return Row(
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [Color(0xFF2F6B45), Color(0xFF9EC89A)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: const Icon(Icons.eco_rounded, color: Colors.white, size: 19),
-        ),
-        if (!compact) ...[
-          const SizedBox(width: 10),
-          const Flexible(
-            child: Text(
-              'FreshNearby',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.4,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _HeaderActions extends StatelessWidget {
-  const _HeaderActions({required this.onOpenPrototype});
-
-  final VoidCallback onOpenPrototype;
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    if (width < 420) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: IconButton.filledTonal(
-          tooltip: 'Open prototype',
-          onPressed: onOpenPrototype,
-          icon: const Icon(Icons.play_arrow_rounded),
-        ),
-      );
-    }
-    if (width < 640) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 12),
-        child: FilledButton(
-          onPressed: onOpenPrototype,
-          child: const Text('Prototype'),
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextButton(
-            onPressed: onOpenPrototype,
-            child: const Text('Prototype'),
-          ),
-          const SizedBox(width: 8),
-          FilledButton(
-            onPressed: onOpenPrototype,
-            child: const Text('Open prototype'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.theme});
-
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final narrow = width < 820;
-    final veryNarrow = width < 460;
-    final copy = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _Pill('Local food marketplace prototype'),
-        const SizedBox(height: 18),
+        const _BrandStrip(),
+        const SizedBox(height: 34),
         Text(
-          'Fresh food, directly from nearby producers.',
-          style:
-              (veryNarrow
-                      ? theme.textTheme.headlineLarge
-                      : theme.textTheme.displayMedium)
-                  ?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    height: 1.02,
-                    letterSpacing: veryNarrow ? -1.0 : -2.2,
-                    color: const Color(0xFF173F2A),
-                  ),
+          'Open the FreshFarm prototype',
+          style: theme.textTheme.displaySmall?.copyWith(
+            color: const Color(0xFF203B2D),
+            fontWeight: FontWeight.w900,
+            height: 1.04,
+          ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
         Text(
-          'FreshNearby helps farmers list what is available, accept requests, manage stock, and share a beautiful farm page customers can order from.',
+          'Pick the side you want to test first.',
           style: theme.textTheme.titleMedium?.copyWith(
-            height: 1.45,
-            color: const Color(0xFF526054),
+            color: const Color(0xFF607065),
+            height: 1.35,
           ),
         ),
-        const SizedBox(height: 28),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            FilledButton.icon(
-              onPressed: () => context.go(AppRoutes.prototype),
-              icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Open prototype'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => context.go(AppRoutes.customerHome),
-              icon: const Icon(Icons.shopping_bag_outlined),
-              label: Text(veryNarrow ? 'Customer' : 'Customer demo'),
-            ),
-          ],
+        const SizedBox(height: 26),
+        _RoleButton(
+          title: 'Farmer',
+          subtitle: 'Dashboard, orders, listings, insights',
+          icon: Icons.agriculture_rounded,
+          color: const Color(0xFF2F6B45),
+          onTap: onFarmer,
+        ),
+        const SizedBox(height: 12),
+        _RoleButton(
+          title: 'Consumer',
+          subtitle: 'Nearby food, farm profiles, deals, chat',
+          icon: Icons.shopping_basket_rounded,
+          color: const Color(0xFF315A87),
+          onTap: onConsumer,
         ),
       ],
     );
-
-    final visual = const _HeroVisual();
-
-    return narrow
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [copy, const SizedBox(height: 34), visual],
-          )
-        : Row(
-            children: [
-              Expanded(flex: 11, child: copy),
-              const SizedBox(width: 46),
-              Expanded(flex: 10, child: visual),
-            ],
-          );
   }
 }
 
-class _HeroVisual extends StatelessWidget {
-  const _HeroVisual();
+class _BrandStrip extends StatelessWidget {
+  const _BrandStrip();
 
   @override
   Widget build(BuildContext context) {
-    final narrow = MediaQuery.sizeOf(context).width < 520;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(34),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A173F2A),
-            blurRadius: 45,
-            offset: Offset(0, 20),
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            color: Color(0xFF2F6B45),
+            shape: BoxShape.circle,
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: Stack(
-          children: [
-            Image.asset(
-              'assets/images/home/hero_market.png',
-              height: narrow ? 360 : 430,
-              width: double.infinity,
-              fit: BoxFit.cover,
+          child: const Icon(Icons.eco_rounded, color: Colors.white),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Text(
+            'FreshFarm',
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Color(0xFF203B2D),
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
             ),
-            Positioned.fill(
-              child: DecoratedBox(
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RoleButton extends StatelessWidget {
+  const _RoleButton({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.black.withValues(alpha: 0.52),
-                      Colors.transparent,
-                      const Color(0xFF173F2A).withValues(alpha: 0.62),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
+                child: Icon(icon, color: color, size: 28),
               ),
-            ),
-            Positioned(
-              left: narrow ? 14 : 22,
-              right: narrow ? 14 : 22,
-              bottom: narrow ? 14 : 22,
-              child: Container(
-                padding: EdgeInsets.all(narrow ? 14 : 18),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(24),
-                ),
+              const SizedBox(width: 16),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'North Field Farm',
-                      style: TextStyle(
-                        fontSize: 20,
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text('New potatoes, honey, carrots and more.'),
-                    const SizedBox(height: 14),
-                    if (narrow)
-                      const Column(
-                        children: [
-                          _MiniMetric(value: '24 kg', label: 'live stock'),
-                          SizedBox(height: 8),
-                          _MiniMetric(value: '4.9', label: 'rating'),
-                        ],
-                      )
-                    else
-                      const Row(
-                        children: [
-                          Expanded(
-                            child: _MiniMetric(
-                              value: '24 kg',
-                              label: 'live stock',
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: _MiniMetric(value: '4.9', label: 'rating'),
-                          ),
-                        ],
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF68766C),
+                        height: 1.25,
                       ),
+                    ),
                   ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Icon(Icons.arrow_forward_rounded, color: color),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _MiniMetric extends StatelessWidget {
-  const _MiniMetric({required this.value, required this.label});
-
-  final String value;
-  final String label;
+class _PreviewPanel extends StatelessWidget {
+  const _PreviewPanel();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF3E7),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final narrow = MediaQuery.sizeOf(context).width < 520;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Stack(
         children: [
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Image.asset(
+            'assets/images/home/hero_market.png',
+            width: double.infinity,
+            height: narrow ? 300 : 560,
+            fit: BoxFit.cover,
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.04),
+                    Colors.black.withValues(alpha: 0.52),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const Positioned(
+            left: 18,
+            right: 18,
+            bottom: 18,
+            child: _PreviewStats(),
+          ),
         ],
       ),
     );
   }
 }
 
-class _Pill extends StatelessWidget {
-  const _Pill(this.label);
-
-  final String label;
+class _PreviewStats extends StatelessWidget {
+  const _PreviewStats();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: const [
+        _StatChip(label: '12 listings live', icon: Icons.storefront_rounded),
+        _StatChip(label: '4 active orders', icon: Icons.receipt_long_rounded),
+        _StatChip(label: 'Local pickup', icon: Icons.place_rounded),
+      ],
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF3E7),
+        color: Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Color(0xFF2F6B45),
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionIntro extends StatelessWidget {
-  const _SectionIntro({
-    required this.eyebrow,
-    required this.title,
-    required this.body,
-  });
-
-  final String eyebrow;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _Pill(eyebrow),
-        const SizedBox(height: 14),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-            letterSpacing: -1.1,
-            color: const Color(0xFF173F2A),
-          ),
-        ),
-        const SizedBox(height: 12),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Text(
-            body,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              height: 1.5,
-              color: const Color(0xFF526054),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ValueGrid extends StatelessWidget {
-  const _ValueGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    final cards = [
-      const _ValueCard(
-        icon: Icons.storefront_outlined,
-        title: 'For farmers',
-        body:
-            'Create listings, update stock, accept requests, share a farm link, and see monthly sales.',
-      ),
-      const _ValueCard(
-        icon: Icons.shopping_bag_outlined,
-        title: 'For customers',
-        body:
-            'Follow farms, add products to cart, request orders, track milestones, and review after delivery.',
-      ),
-      const _ValueCard(
-        icon: Icons.local_shipping_outlined,
-        title: 'For local logistics',
-        body:
-            'Keep pickup simple while supporting courier delivery as the marketplace scales.',
-      ),
-    ];
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 780;
-        if (narrow) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < cards.length; i++) ...[
-                if (i > 0) const SizedBox(height: 14),
-                cards[i],
-              ],
-            ],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            for (var i = 0; i < cards.length; i++) ...[
-              if (i > 0) const SizedBox(width: 14),
-              Expanded(child: cards[i]),
-            ],
+            Icon(icon, size: 18, color: const Color(0xFF2F6B45)),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF203B2D),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ],
-        );
-      },
-    );
-  }
-}
-
-class _ValueCard extends StatelessWidget {
-  const _ValueCard({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
-
-  final IconData icon;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE1E9DE)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: const Color(0xFFEAF3E7),
-            foregroundColor: const Color(0xFF2F6B45),
-            child: Icon(icon),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              height: 1.45,
-              color: const Color(0xFF526054),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HowItWorksSection extends StatelessWidget {
-  const _HowItWorksSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: const Color(0xFF173F2A),
-        borderRadius: BorderRadius.circular(34),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final narrow = constraints.maxWidth < 760;
-          final steps = [
-            const _StepCard(
-              '1',
-              'List',
-              'Farmers add product, price and stock.',
-            ),
-            const _StepCard(
-              '2',
-              'Request',
-              'Customers choose quantity and request an order.',
-            ),
-            const _StepCard(
-              '3',
-              'Fulfil',
-              'Farmers accept, prepare, and mark delivery status.',
-            ),
-            const _StepCard(
-              '4',
-              'Learn',
-              'Reviews and sales insights help the farm improve.',
-            ),
-          ];
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _Pill('What we do'),
-              const SizedBox(height: 16),
-              Text(
-                'One simple flow from live stock to delivered order.',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.8,
-                ),
-              ),
-              const SizedBox(height: 24),
-              if (narrow)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < steps.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 12),
-                      steps[i],
-                    ],
-                  ],
-                )
-              else
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var i = 0; i < steps.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 12),
-                      Expanded(child: steps[i]),
-                    ],
-                  ],
-                ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _StepCard extends StatelessWidget {
-  const _StepCard(this.number, this.title, this.body);
-
-  final String number;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            number,
-            style: const TextStyle(
-              color: Color(0xFFB8DFAF),
-              fontWeight: FontWeight.w900,
-              fontSize: 24,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(body, style: const TextStyle(color: Colors.white70)),
-        ],
-      ),
-    );
-  }
-}
-
-class _PrototypeSection extends StatelessWidget {
-  const _PrototypeSection({
-    required this.onOpenPrototype,
-    required this.onOpenCustomer,
-  });
-
-  final VoidCallback onOpenPrototype;
-  final VoidCallback onOpenCustomer;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF3E7),
-        borderRadius: BorderRadius.circular(34),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final narrow = constraints.maxWidth < 820;
-          final copy = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _Pill('Prototype section'),
-              const SizedBox(height: 16),
-              Text(
-                'Try the working farmer and customer demo.',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.8,
-                  color: const Color(0xFF173F2A),
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'The current prototype includes live-feeling order flow, stock reduction, cart, payment authorization, reviews, insights, and multilingual UI.',
-                style: TextStyle(height: 1.5, color: Color(0xFF526054)),
-              ),
-              const SizedBox(height: 22),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  FilledButton.icon(
-                    onPressed: onOpenPrototype,
-                    icon: const Icon(Icons.open_in_new_rounded),
-                    label: const Text('Open prototype'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: onOpenCustomer,
-                    icon: const Icon(Icons.person_search_outlined),
-                    label: const Text('View farm page'),
-                  ),
-                ],
-              ),
-            ],
-          );
-
-          const preview = _PrototypePreview();
-          return narrow
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [copy, const SizedBox(height: 24), preview],
-                )
-              : Row(
-                  children: [
-                    Expanded(child: copy),
-                    const SizedBox(width: 28),
-                    const Expanded(child: preview),
-                  ],
-                );
-        },
-      ),
-    );
-  }
-}
-
-class _PrototypePreview extends StatelessWidget {
-  const _PrototypePreview();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Column(
-        children: [
-          _PreviewRow(
-            icon: Icons.inventory_2_outlined,
-            title: 'Product stock',
-            body: 'New potato - 24 kg live',
-          ),
-          _PreviewRow(
-            icon: Icons.receipt_long_outlined,
-            title: 'Order status',
-            body: 'Accepted - ready next',
-          ),
-          _PreviewRow(
-            icon: Icons.insights_rounded,
-            title: 'Monthly insight',
-            body: 'Top product and sales trend',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PreviewRow extends StatelessWidget {
-  const _PreviewRow({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
-
-  final IconData icon;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: const Color(0xFFEAF3E7),
-            foregroundColor: const Color(0xFF2F6B45),
-            child: Icon(icon),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                Text(body),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoadmapSection extends StatelessWidget {
-  const _RoadmapSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final items = [
-      'Start farmer-first with a simple market stand farmers can share anywhere',
-      'Onboard nearby customers into trusted farm pages and repeat ordering',
-      'Build a local food ecosystem where demand, stock and orders stay visible',
-      'Grow pickup and courier flows into a FreshNearby supply chain',
-      'Scale region by region with stronger farm identity, reviews and insights',
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Roadmap',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF173F2A),
-          ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'From farmer-focused selling tools to a local supply chain customers can trust.',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: const Color(0xFF526054),
-            height: 1.45,
-          ),
-        ),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final narrow = constraints.maxWidth < 620;
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                for (final item in items)
-                  SizedBox(
-                    width: narrow
-                        ? constraints.maxWidth
-                        : (constraints.maxWidth - 12) / 2,
-                    child: _RoadmapItem(item),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _RoadmapItem extends StatelessWidget {
-  const _RoadmapItem(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE1E9DE)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.check_circle_outline,
-            size: 19,
-            color: Color(0xFF2F6B45),
-          ),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text)),
-        ],
-      ),
-    );
-  }
-}
-
-class _Footer extends StatelessWidget {
-  const _Footer();
-
-  @override
-  Widget build(BuildContext context) {
-    final narrow = MediaQuery.sizeOf(context).width < 560;
-    return Column(
-      children: [
-        const Divider(),
-        const SizedBox(height: 18),
-        if (narrow)
-          const Column(
-            children: [
-              _BrandMark(),
-              SizedBox(height: 10),
-              Text(
-                'Prototype for local food ordering.',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          )
-        else
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _BrandMark(),
-              Text('Prototype for local food ordering.'),
-            ],
-          ),
-      ],
     );
   }
 }

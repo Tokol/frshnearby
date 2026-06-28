@@ -96,7 +96,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.prototype,
-        redirect: (context, state) => AppRoutes.farmerDashboard,
+        builder: (context, state) => const MarketingHomeScreen(),
       ),
       GoRoute(
         path: AppRoutes.splash,
