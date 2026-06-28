@@ -42,16 +42,43 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.customerSearchTitle)),
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.customerHome);
+            }
+          },
+        ),
+        title: Text(l10n.customerSearchTitle),
+      ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
+              autofocus: true,
+              textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 labelText: l10n.searchListingsHint,
                 prefixIcon: const Icon(Icons.search),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).deleteButtonTooltip,
+                        icon: const Icon(Icons.clear_rounded),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
               ),
               onChanged: (value) => setState(() => _query = value),
             ),

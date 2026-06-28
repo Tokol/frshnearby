@@ -163,6 +163,7 @@ class FeedPost {
     this.priceLabel,
     this.quantityLabel,
     this.acceptsPreOrders = false,
+    this.editedAt,
     bool? offersFinished,
     bool? commentsEnabled,
     this.photoEmoji = '🥕',
@@ -186,18 +187,24 @@ class FeedPost {
   final String? priceLabel;
   final String? quantityLabel;
   final bool acceptsPreOrders;
+  final DateTime? editedAt;
   final bool? _offersFinished;
   final bool? _commentsEnabled;
   bool get isOffersFinished => _offersFinished ?? false;
   bool get areCommentsEnabled => _commentsEnabled ?? true;
+  bool get isEdited => editedAt != null;
   final String photoEmoji;
 
   FeedPost copyWith({
+    String? title,
+    String? description,
+    List<String>? photos,
     List<FeedComment>? comments,
     List<FeedOffer>? offers,
     bool? offersFinished,
     bool? commentsEnabled,
     DateTime? bumpedAt,
+    DateTime? editedAt,
   }) {
     return FeedPost(
       id: id,
@@ -205,18 +212,19 @@ class FeedPost {
       type: type,
       authorName: authorName,
       actorType: actorType,
-      title: title,
-      description: description,
+      title: title ?? this.title,
+      description: description ?? this.description,
       location: location,
       dateLabel: dateLabel,
       createdAt: createdAt,
       bumpedAt: bumpedAt ?? this.bumpedAt,
       comments: comments ?? this.comments,
       offers: offers ?? this.offers,
-      photos: photos,
+      photos: photos ?? this.photos,
       priceLabel: priceLabel,
       quantityLabel: quantityLabel,
       acceptsPreOrders: acceptsPreOrders,
+      editedAt: editedAt ?? this.editedAt,
       offersFinished: offersFinished ?? isOffersFinished,
       commentsEnabled: commentsEnabled ?? areCommentsEnabled,
       photoEmoji: photoEmoji,

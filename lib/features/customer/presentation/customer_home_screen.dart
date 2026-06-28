@@ -12,11 +12,12 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/farm_avatar.dart';
+import '../../catalog/presentation/category_visuals.dart';
 import '../../customer_marketplace/domain/customer_listing.dart';
 import '../../customer_marketplace/presentation/customer_marketplace_controller.dart';
 import '../../listings/domain/product_detail_labels.dart';
 import '../../social_feed/presentation/social_feed_screen.dart';
-import 'cart_controller.dart';
+import 'farm_buying_sheet.dart';
 import 'followed_farms_controller.dart';
 
 class CustomerHomeScreen extends ConsumerStatefulWidget {
@@ -61,165 +62,30 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
             final followedProducts = items
                 .where((item) => followedFarmIds.contains(item.farmer.id))
                 .toList();
-            final meatProducts = items
-                .where((item) => item.listing.categoryId == 'category-meat')
-                .toList();
+            final nearbyCategories = _availableCategories(items, locale);
             return CustomScrollView(
               slivers: [
-                const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                const SliverToBoxAdapter(child: CustomerActiveOffersStrip()),
                 SliverToBoxAdapter(
-                  child: _HorizontalCategorySection(
-                    categories: [
-                      _HomeCategory(
-                        categoryId: 'category-meat',
-                        label: l10n.categoryMeat,
-                        emoji: '🥩',
-                        emojiBackground: const Color(0xFFFFF4EE),
-                        color: const Color(0xFFFFE0D6),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-fish',
-                        label: l10n.categoryFish,
-                        emoji: '🐟',
-                        emojiBackground: const Color(0xFFF1FBFF),
-                        color: const Color(0xFFD9F1FF),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-bakery',
-                        label: l10n.categoryBakery,
-                        emoji: '🥖',
-                        emojiBackground: const Color(0xFFFFF7E3),
-                        color: const Color(0xFFFFE8B7),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-vegetables',
-                        label: l10n.categoryVegetables,
-                        emoji: '🥦',
-                        emojiBackground: const Color(0xFFF1FBEA),
-                        color: const Color(0xFFDFF4D7),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-fruits',
-                        label: l10n.categoryFruits,
-                        emoji: '🍎',
-                        emojiBackground: const Color(0xFFFFF3D8),
-                        color: const Color(0xFFFFE2A8),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-dairy',
-                        label: l10n.categoryDairy,
-                        emoji: '🧈',
-                        emojiBackground: const Color(0xFFF6F7FF),
-                        color: const Color(0xFFE5E9FF),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-eggs',
-                        label: l10n.categoryEggs,
-                        emoji: '🥚',
-                        emojiBackground: const Color(0xFFFFF9E8),
-                        color: const Color(0xFFFFF1C8),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-honey',
-                        label: l10n.categoryHoney,
-                        emoji: '🍯',
-                        emojiBackground: const Color(0xFFFFF2CC),
-                        color: const Color(0xFFFFE3A3),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-cheese',
-                        label: l10n.categoryCheese,
-                        emoji: '🧀',
-                        emojiBackground: const Color(0xFFFFF8CF),
-                        color: const Color(0xFFFFF0A8),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-milk',
-                        label: l10n.categoryMilk,
-                        emoji: '🥛',
-                        emojiBackground: const Color(0xFFF7FBFF),
-                        color: const Color(0xFFEAF4FF),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-herbs',
-                        label: l10n.categoryHerbs,
-                        emoji: '🌿',
-                        emojiBackground: const Color(0xFFF0FFF2),
-                        color: const Color(0xFFDDF6DF),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-mushrooms',
-                        label: l10n.categoryMushrooms,
-                        emoji: '🍄',
-                        emojiBackground: const Color(0xFFF5EFE8),
-                        color: const Color(0xFFE8DED5),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-berries',
-                        label: l10n.categoryBerries,
-                        emoji: '🫐',
-                        emojiBackground: const Color(0xFFFFEFF7),
-                        color: const Color(0xFFF4D8EA),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-flowers',
-                        label: l10n.categoryFlowers,
-                        emoji: '💐',
-                        emojiBackground: const Color(0xFFFFF1F8),
-                        color: const Color(0xFFFFE0EF),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-drinks',
-                        label: l10n.categoryJuice,
-                        emoji: '🧃',
-                        emojiBackground: const Color(0xFFFFF0DF),
-                        color: const Color(0xFFFFDDB5),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-preserves',
-                        label: l10n.categoryPreserves,
-                        emoji: '🫙',
-                        emojiBackground: const Color(0xFFF2FAF4),
-                        color: const Color(0xFFE4F0E8),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-grains',
-                        label: l10n.categoryGrains,
-                        emoji: '🌾',
-                        emojiBackground: const Color(0xFFFFF8EA),
-                        color: const Color(0xFFFFEBC7),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-prepared-food',
-                        label: l10n.categoryReadyMeals,
-                        emoji: '🍲',
-                        emojiBackground: const Color(0xFFF6F2FF),
-                        color: const Color(0xFFE7E1FF),
-                      ),
-                      _HomeCategory(
-                        categoryId: 'category-organic',
-                        label: l10n.categoryOrganic,
-                        emoji: '🌱',
-                        emojiBackground: const Color(0xFFF1FFE9),
-                        color: const Color(0xFFD8F3C8),
-                      ),
-                    ],
-                    onTap: (category) {
-                      if (category.categoryId == 'category-meat' &&
-                          meatProducts.isNotEmpty) {
-                        _showBuyingSheet(meatProducts.first, items);
-                        return;
-                      }
-                      context.go(AppRoutes.customerSearch);
-                    },
+                  child: _HomeTopBar(
+                    locationName: locationState.displayLocation.displayName,
+                    onLocationTap: _showLocationSearch,
+                    onSearch: () => context.push(AppRoutes.customerSearch),
                   ),
                 ),
+                const SliverToBoxAdapter(child: CustomerActiveOffersStrip()),
+                if (nearbyCategories.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _HorizontalCategorySection(
+                      categories: nearbyCategories,
+                      onTap: (category) =>
+                          _showBuyingSheet(category.listings.first, items),
+                    ),
+                  ),
                 SliverToBoxAdapter(
                   child: _ListingRail(
                     title: 'Hot sales near you',
                     listings: items,
-                    onSeeAll: () => context.go(AppRoutes.customerSearch),
+                    onSeeAll: () => context.push(AppRoutes.customerSearch),
                     onTap: (listing) => _showBuyingSheet(listing, items),
                   ),
                 ),
@@ -383,17 +249,10 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
         )
         .toList();
 
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      useSafeArea: true,
-      builder: (context) {
-        return _HotSaleBuyingSheet(
-          listing: listing,
-          farmerListings: farmerListings,
-        );
-      },
+    return showFarmBuyingSheet(
+      context,
+      listing: listing,
+      farmerListings: farmerListings,
     );
   }
 }
@@ -482,6 +341,93 @@ class _LocationSearchSheetState extends ConsumerState<_LocationSearchSheet> {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Categories that actually have nearby stock, busiest first. Empty categories
+/// are omitted entirely so the strip never offers a dead-end tap.
+List<_HomeCategory> _availableCategories(
+  List<CustomerListing> items,
+  String locale,
+) {
+  final byCategory = <String, List<CustomerListing>>{};
+  for (final item in items) {
+    byCategory.putIfAbsent(item.listing.categoryId, () => []).add(item);
+  }
+  final entries = byCategory.entries.toList()
+    ..sort((a, b) => b.value.length.compareTo(a.value.length));
+  return [
+    for (final entry in entries)
+      _HomeCategory(
+        categoryId: entry.key,
+        label: entry.value.first.category.displayName(locale),
+        listings: entry.value,
+      ),
+  ];
+}
+
+class _HomeTopBar extends StatelessWidget {
+  const _HomeTopBar({
+    required this.locationName,
+    required this.onLocationTap,
+    required this.onSearch,
+  });
+
+  final String locationName;
+  final VoidCallback onLocationTap;
+  final VoidCallback onSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: onLocationTap,
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.place_outlined,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        locationName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton.filledTonal(
+            tooltip: MaterialLocalizations.of(context).searchFieldLabel,
+            onPressed: onSearch,
+            icon: const Icon(Icons.search_rounded),
+          ),
+        ],
       ),
     );
   }
@@ -584,6 +530,7 @@ class _CategoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final visual = categoryVisual(category.categoryId);
 
     return InkWell(
       borderRadius: BorderRadius.circular(22),
@@ -595,7 +542,7 @@ class _CategoryTile extends StatelessWidget {
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
-                color: category.color,
+                color: visual.tileColor,
                 borderRadius: BorderRadius.circular(22),
               ),
               child: SizedBox(
@@ -604,19 +551,15 @@ class _CategoryTile extends StatelessWidget {
                 child: Center(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: category.emojiBackground,
+                      color: visual.glyphBackground,
                       shape: BoxShape.circle,
                     ),
                     child: SizedBox.square(
                       dimension: 62,
                       child: Center(
-                        child: Text(
-                          category.emoji,
-                          style: const TextStyle(
-                            fontSize: 34,
-                            height: 1,
-                            letterSpacing: 0,
-                          ),
+                        child: CategoryGlyph(
+                          categoryId: category.categoryId,
+                          size: 34,
                         ),
                       ),
                     ),
@@ -740,7 +683,7 @@ class _HomeListingCard extends StatelessWidget {
                   SizedBox(
                     height: imageHeight,
                     width: double.infinity,
-                    child: _HomeImage(assetPath: _assetForListing(listing)),
+                    child: FarmListingImage(assetPath: farmListingAsset(listing)),
                   ),
                   PositionedDirectional(
                     top: 12,
@@ -860,27 +803,6 @@ class _HomeListingCard extends StatelessWidget {
     );
   }
 
-  String _assetForListing(CustomerListing listing) {
-    switch (listing.listing.productId) {
-      case 'product-potato':
-        return 'assets/images/home/potatoes.png';
-      case 'product-tomato':
-        return 'assets/images/home/tomatoes.png';
-      case 'product-honey':
-        return 'assets/images/home/honey_jar.png';
-      case 'product-lamb':
-      case 'product-beef':
-      case 'product-pork':
-      case 'product-minced-meat':
-        return 'assets/images/home/meat_hot_sale.png';
-      case 'product-apple':
-        return 'assets/images/home/fruits.png';
-      case 'product-egg':
-        return 'assets/images/home/eggs.png';
-      default:
-        return 'assets/images/home/vegetables.png';
-    }
-  }
 }
 
 double _homeListingRailHeight(BuildContext context) {
@@ -998,864 +920,6 @@ class _SectionTitle extends StatelessWidget {
               child: Text(l10n.seeAllButton),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _HomeImage extends StatelessWidget {
-  const _HomeImage({required this.assetPath, this.fit = BoxFit.cover});
-
-  final String assetPath;
-  final BoxFit fit;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Image.asset(
-      assetPath,
-      fit: fit,
-      errorBuilder: (context, error, stackTrace) {
-        return DecoratedBox(
-          decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest),
-          child: Icon(Icons.image_outlined, color: colorScheme.primary),
-        );
-      },
-    );
-  }
-}
-
-class _HotSaleBuyingSheet extends ConsumerStatefulWidget {
-  const _HotSaleBuyingSheet({
-    required this.listing,
-    required this.farmerListings,
-  });
-
-  final CustomerListing listing;
-  final List<CustomerListing> farmerListings;
-
-  @override
-  ConsumerState<_HotSaleBuyingSheet> createState() =>
-      _HotSaleBuyingSheetState();
-}
-
-class _HotSaleBuyingSheetState extends ConsumerState<_HotSaleBuyingSheet> {
-  late Map<String, double> _quantities;
-
-  @override
-  void initState() {
-    super.initState();
-    _quantities = {
-      widget.listing.listing.id: widget.listing.listing.quantity < 1
-          ? widget.listing.listing.quantity
-          : 1,
-      for (final item in widget.farmerListings) item.listing.id: 0,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).languageCode;
-    final listing = widget.listing;
-    final variantName = listing.variantName(locale);
-    final productName = variantName ?? listing.productName(locale);
-    final detailLabels = productDetailLabels(listing.listing.categoryId);
-    final date = listing.listing.harvestDate;
-    final basketLines = _basketLines;
-    final total = basketLines.fold<double>(
-      0,
-      (sum, item) => sum + item.listing.price * _quantityFor(item),
-    );
-    final selectedCount = basketLines.fold<int>(
-      0,
-      (sum, item) => sum + (_quantityFor(item) > 0 ? 1 : 0),
-    );
-
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.88,
-      minChildSize: 0.55,
-      maxChildSize: 0.96,
-      builder: (context, scrollController) {
-        return ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: AspectRatio(
-                aspectRatio: 1.55,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    _HomeImage(assetPath: _assetForListing(listing)),
-                    PositionedDirectional(
-                      top: 12,
-                      start: 12,
-                      child: _SheetPill(
-                        icon: Icons.local_fire_department_rounded,
-                        label: 'Hot sale',
-                        background: theme.colorScheme.errorContainer,
-                        foreground: theme.colorScheme.onErrorContainer,
-                      ),
-                    ),
-                    PositionedDirectional(
-                      end: 12,
-                      bottom: 12,
-                      child: _SheetPill(
-                        icon: Icons.inventory_2_outlined,
-                        label:
-                            '${_formatQuantity(listing.listing.quantity)} ${listing.listing.unit} left',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    productName,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '${listing.listing.price.toStringAsFixed(2)} / ${listing.listing.unit}',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              listing.listing.description,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _SheetPill(
-                  icon: Icons.place_outlined,
-                  label:
-                      '${listing.distanceKm.toStringAsFixed(1)} ${l10n.kilometersAwayLabel}',
-                ),
-                _SheetPill(
-                  icon: Icons.star_rounded,
-                  label: listing.farmer.reviewCount == 0
-                      ? l10n.newFarmLabel
-                      : '${listing.farmer.rating.toStringAsFixed(1)} (${listing.farmer.reviewCount})',
-                ),
-                if (date != null)
-                  _SheetPill(
-                    icon: Icons.event_available_outlined,
-                    label:
-                        '${date.isAfter(DateTime.now()) ? detailLabels.futureDate : detailLabels.pastDate} ${DateFormat('d MMM').format(date)}',
-                  ),
-                if (listing.listing.deliveryEnabled)
-                  const _SheetPill(
-                    icon: Icons.local_shipping_outlined,
-                    label: 'Delivery nearby',
-                  ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _FarmerBuyingPanel(listing: listing),
-            const SizedBox(height: 18),
-            if (listing.listing.farmingMethod?.trim().isNotEmpty ?? false)
-              _SheetDetail(
-                icon: Icons.eco_outlined,
-                label: detailLabels.method.replaceAll(' (optional)', ''),
-                value: listing.listing.farmingMethod!,
-              ),
-            if (listing.listing.bestBeforeDate != null)
-              _SheetDetail(
-                icon: Icons.schedule_outlined,
-                label: l10n.bestBeforeLabel,
-                value: DateFormat(
-                  'd MMM yyyy',
-                ).format(listing.listing.bestBeforeDate!),
-              ),
-            if (listing.listing.storageInstructions?.trim().isNotEmpty ?? false)
-              _SheetDetail(
-                icon: Icons.kitchen_outlined,
-                label: l10n.storageLabel,
-                value: listing.listing.storageInstructions!,
-              ),
-            if (listing.listing.pickupNotes?.trim().isNotEmpty ?? false)
-              _SheetDetail(
-                icon: Icons.shopping_bag_outlined,
-                label: 'Pickup',
-                value: listing.listing.pickupNotes!,
-              ),
-            const SizedBox(height: 16),
-            _UnifiedFarmBasketPanel(
-              farmName: listing.farmer.farmName,
-              lines: basketLines,
-              quantities: _quantities,
-              assetForListing: _assetForListing,
-              onChanged: _setQuantity,
-            ),
-            if (widget.farmerListings.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Complete this farm order',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                  _SheetPill(
-                    icon: Icons.shopping_basket_outlined,
-                    label: '$selectedCount selected',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 184,
-                child: ListView.separated(
-                  primary: false,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: widget.farmerListings.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
-                  itemBuilder: (context, index) {
-                    final item = widget.farmerListings[index];
-                    return _FarmerShelfItem(
-                      listing: item,
-                      quantity: _quantityFor(item),
-                      imagePath: _assetForListing(item),
-                      onChanged: (value) => _setQuantity(item, value),
-                    );
-                  },
-                ),
-              ),
-            ],
-            const SizedBox(height: 20),
-            _CheckoutSummaryBar(
-              selectedCount: selectedCount,
-              total: total,
-              onAddAll: selectedCount == 0
-                  ? null
-                  : () {
-                      final messenger = ScaffoldMessenger.of(context);
-                      final router = GoRouter.of(context);
-                      final cart = ref.read(cartControllerProvider.notifier);
-                      for (final item in basketLines) {
-                        final quantity = _quantityFor(item);
-                        if (quantity > 0) {
-                          cart.add(item, quantity);
-                        }
-                      }
-                      Navigator.of(context).pop();
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '$selectedCount farm item${selectedCount == 1 ? '' : 's'} added to basket',
-                          ),
-                          action: SnackBarAction(
-                            label: 'Basket',
-                            onPressed: () => router.go(AppRoutes.customerDeals),
-                          ),
-                        ),
-                      );
-                    },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  List<CustomerListing> get _basketLines => [
-    widget.listing,
-    ...widget.farmerListings,
-  ];
-
-  double _quantityFor(CustomerListing listing) =>
-      _quantities[listing.listing.id] ?? 0;
-
-  void _setQuantity(CustomerListing listing, double value) {
-    final min = listing.listing.id == widget.listing.listing.id ? 1.0 : 0.0;
-    final safeValue = value.clamp(min, listing.listing.quantity).toDouble();
-    setState(() {
-      _quantities = {..._quantities, listing.listing.id: safeValue};
-    });
-  }
-
-  String _assetForListing(CustomerListing listing) {
-    switch (listing.listing.productId) {
-      case 'product-lamb':
-      case 'product-beef':
-      case 'product-pork':
-      case 'product-minced-meat':
-        return 'assets/images/home/meat_hot_sale.png';
-      case 'product-egg':
-        return 'assets/images/home/eggs.png';
-      case 'product-milk':
-        return 'assets/images/home/honey.png';
-      case 'product-honey':
-        return 'assets/images/home/honey_jar.png';
-      case 'product-tomato':
-        return 'assets/images/home/tomatoes.png';
-      case 'product-potato':
-        return 'assets/images/home/potatoes.png';
-      default:
-        return 'assets/images/home/vegetables.png';
-    }
-  }
-}
-
-class _FarmerBuyingPanel extends StatelessWidget {
-  const _FarmerBuyingPanel({required this.listing});
-
-  final CustomerListing listing;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        Navigator.of(context).pop();
-        context.go(AppRoutes.farmerPublicProfile(listing.farmer.id));
-      },
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              FarmAvatar(
-                farmName: listing.farmer.farmName,
-                radius: 24,
-                photo: listing.farmer.profilePhotoPlaceholder,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      listing.farmer.farmName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${listing.farmer.approximateLocation} · ${listing.farmer.shortDescription}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Tooltip(
-                message: l10n.viewFarmProfileButton,
-                child: const Icon(Icons.chevron_right_rounded),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _UnifiedFarmBasketPanel extends StatelessWidget {
-  const _UnifiedFarmBasketPanel({
-    required this.farmName,
-    required this.lines,
-    required this.quantities,
-    required this.assetForListing,
-    required this.onChanged,
-  });
-
-  final String farmName;
-  final List<CustomerListing> lines;
-  final Map<String, double> quantities;
-  final String Function(CustomerListing listing) assetForListing;
-  final void Function(CustomerListing listing, double value) onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final selectedLines = lines
-        .where((item) => (quantities[item.listing.id] ?? 0) > 0)
-        .toList();
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.28),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.shopping_basket_outlined,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Your $farmName basket',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            if (selectedLines.isEmpty)
-              Text(
-                'Choose quantities once, then add the whole farm order together.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-            else
-              ...selectedLines.map((item) {
-                final quantity = quantities[item.listing.id] ?? 0;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _FarmBasketLine(
-                    listing: item,
-                    quantity: quantity,
-                    imagePath: assetForListing(item),
-                    canRemove: item != lines.first,
-                    onChanged: (value) => onChanged(item, value),
-                  ),
-                );
-              }),
-            const SizedBox(height: 2),
-            Text(
-              'One checkout, one pickup conversation, one farmer relationship.',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FarmBasketLine extends StatelessWidget {
-  const _FarmBasketLine({
-    required this.listing,
-    required this.quantity,
-    required this.imagePath,
-    required this.canRemove,
-    required this.onChanged,
-  });
-
-  final CustomerListing listing;
-  final double quantity;
-  final String imagePath;
-  final bool canRemove;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context).languageCode;
-    final title = listing.variantName(locale) ?? listing.productName(locale);
-    final lineTotal = listing.listing.price * quantity;
-    final isAtLimit = quantity >= listing.listing.quantity;
-
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox.square(
-            dimension: 52,
-            child: _HomeImage(assetPath: imagePath),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${_formatQuantity(quantity)} of ${_formatQuantity(listing.listing.quantity)} ${listing.listing.unit} · ${lineTotal.toStringAsFixed(2)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isAtLimit
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontWeight: isAtLimit ? FontWeight.w800 : null,
-                ),
-              ),
-            ],
-          ),
-        ),
-        _MiniQuantityStepper(
-          quantity: quantity,
-          min: canRemove ? 0 : 1,
-          max: listing.listing.quantity,
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-}
-
-class _MiniQuantityStepper extends StatelessWidget {
-  const _MiniQuantityStepper({
-    required this.quantity,
-    required this.min,
-    required this.max,
-    required this.onChanged,
-  });
-
-  final double quantity;
-  final double min;
-  final double max;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final canDecrease = quantity > min;
-    final canIncrease = quantity < max;
-    final limitLabel = quantity >= max
-        ? 'Maximum ${_formatQuantity(max)} selected'
-        : 'Increase up to ${_formatQuantity(max)}';
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            tooltip: 'Decrease',
-            visualDensity: VisualDensity.compact,
-            iconSize: 18,
-            onPressed: canDecrease
-                ? () => onChanged((quantity - 1).clamp(min, max).toDouble())
-                : null,
-            icon: const Icon(Icons.remove_rounded),
-          ),
-          SizedBox(
-            width: 28,
-            child: Text(
-              _formatQuantity(quantity),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: limitLabel,
-            visualDensity: VisualDensity.compact,
-            iconSize: 18,
-            onPressed: canIncrease
-                ? () => onChanged((quantity + 1).clamp(min, max).toDouble())
-                : null,
-            icon: const Icon(Icons.add_rounded),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SheetDetail extends StatelessWidget {
-  const _SheetDetail({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SheetPill extends StatelessWidget {
-  const _SheetPill({
-    required this.icon,
-    required this.label,
-    this.background,
-    this.foreground,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color? background;
-  final Color? foreground;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final bg = background ?? theme.colorScheme.surface;
-    final fg = foreground ?? theme.colorScheme.onSurface;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: bg.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15, color: fg),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: fg,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CheckoutSummaryBar extends StatelessWidget {
-  const _CheckoutSummaryBar({
-    required this.selectedCount,
-    required this.total,
-    required this.onAddAll,
-  });
-
-  final int selectedCount;
-  final double total;
-  final VoidCallback? onAddAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    selectedCount == 0
-                        ? 'No items selected'
-                        : '$selectedCount selected',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    total.toStringAsFixed(2),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            FilledButton.icon(
-              onPressed: onAddAll,
-              icon: const Icon(Icons.add_shopping_cart_rounded),
-              label: const Text('Add all'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FarmerShelfItem extends StatelessWidget {
-  const _FarmerShelfItem({
-    required this.listing,
-    required this.quantity,
-    required this.imagePath,
-    required this.onChanged,
-  });
-
-  final CustomerListing listing;
-  final double quantity;
-  final String imagePath;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context).languageCode;
-    final title = listing.variantName(locale) ?? listing.productName(locale);
-
-    return SizedBox(
-      width: 152,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: _HomeImage(assetPath: imagePath, fit: BoxFit.cover),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${listing.listing.price.toStringAsFixed(2)} / ${listing.listing.unit}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${_formatQuantity(listing.listing.quantity)} ${listing.listing.unit} available',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: quantity >= listing.listing.quantity
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Center(
-                child: _MiniQuantityStepper(
-                  quantity: quantity,
-                  min: 0,
-                  max: listing.listing.quantity,
-                  onChanged: onChanged,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -1997,21 +1061,10 @@ class _HomeCategory {
   const _HomeCategory({
     required this.categoryId,
     required this.label,
-    required this.emoji,
-    required this.color,
-    required this.emojiBackground,
+    required this.listings,
   });
 
   final String categoryId;
   final String label;
-  final String emoji;
-  final Color color;
-  final Color emojiBackground;
-}
-
-String _formatQuantity(double value) {
-  if (value == value.roundToDouble()) {
-    return value.toStringAsFixed(0);
-  }
-  return value.toStringAsFixed(1);
+  final List<CustomerListing> listings;
 }

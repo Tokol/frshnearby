@@ -67,6 +67,25 @@ class SocialFeedController extends StateNotifier<SocialFeedState> {
     state = state.copyWith(posts: [post, ...state.posts]);
   }
 
+  void updatePost({
+    required String postId,
+    required String product,
+    required String description,
+    required List<String> photos,
+  }) {
+    final title = product.trim();
+    final desc = description.trim();
+    _updatePost(
+      postId,
+      (post) => post.copyWith(
+        title: title.isEmpty ? post.title : title,
+        description: desc.isEmpty ? post.description : desc,
+        photos: photos,
+        editedAt: DateTime.now(),
+      ),
+    );
+  }
+
   void addComment({
     required String postId,
     required String authorName,

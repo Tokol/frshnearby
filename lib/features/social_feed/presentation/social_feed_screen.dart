@@ -1022,6 +1022,10 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                               icon: const Icon(Icons.more_horiz_rounded),
                               onSelected: _handlePostOption,
                               itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'edit-post',
+                                  child: Text('Edit post'),
+                                ),
                                 PopupMenuItem(
                                   value: post.isOffersFinished
                                       ? 'reopen-offers'
@@ -1048,7 +1052,9 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _feedTimestamp(post.bumpedAt ?? post.createdAt),
+                        post.isEdited
+                            ? '${_feedTimestamp(post.bumpedAt ?? post.createdAt)} · edited'
+                            : _feedTimestamp(post.bumpedAt ?? post.createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -1195,6 +1201,9 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
   void _handlePostOption(String value) {
     final controller = ref.read(socialFeedControllerProvider.notifier);
     switch (value) {
+      case 'edit-post':
+        _openEditSheet();
+        break;
       case 'finish-offers':
         controller.setOffersFinished(widget.post.id, true);
         break;
@@ -1206,6 +1215,20 @@ class _FeedPostCardState extends ConsumerState<_FeedPostCard> {
         controller.deletePost(widget.post.id);
         break;
     }
+  }
+
+  void _openEditSheet() {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _CreatePostSheet(
+          viewerId: widget.viewerId,
+          viewerName: widget.viewerName,
+          viewerPhoto: widget.authorPhoto,
+          editingPost: widget.post,
+        ),
+      ),
+    );
   }
 
   void _openFarmProfile() {
@@ -2022,11 +2045,13 @@ class _CreatePostSheet extends StatefulWidget {
     required this.viewerId,
     required this.viewerName,
     required this.viewerPhoto,
+    this.editingPost,
   });
 
   final String viewerId;
   final String viewerName;
   final String? viewerPhoto;
+  final FeedPost? editingPost;
 
   @override
   State<_CreatePostSheet> createState() => _CreatePostSheetState();
@@ -2037,9 +2062,17 @@ class _CreatePostSheetState extends State<_CreatePostSheet> {
   final _description = TextEditingController();
   final List<String> _photos = [];
 
+  bool get _isEditing => widget.editingPost != null;
+
   @override
   void initState() {
     super.initState();
+    final editing = widget.editingPost;
+    if (editing != null) {
+      _product.text = editing.title;
+      _description.text = editing.description;
+      _photos.addAll(editing.photos);
+    }
     _product.addListener(_refreshPostState);
     _description.addListener(_refreshPostState);
   }
@@ -2066,15 +2099,24 @@ class _CreatePostSheetState extends State<_CreatePostSheet> {
     final description = _description.text.trim().isEmpty
         ? title
         : _description.text.trim();
-    ref
-        .read(socialFeedControllerProvider.notifier)
-        .addPost(
-          authorId: widget.viewerId,
-          authorName: widget.viewerName,
-          product: title,
-          description: description,
-          photos: _photos,
-        );
+    final controller = ref.read(socialFeedControllerProvider.notifier);
+    final editing = widget.editingPost;
+    if (editing != null) {
+      controller.updatePost(
+        postId: editing.id,
+        product: title,
+        description: description,
+        photos: _photos,
+      );
+    } else {
+      controller.addPost(
+        authorId: widget.viewerId,
+        authorName: widget.viewerName,
+        product: title,
+        description: description,
+        photos: _photos,
+      );
+    }
     Navigator.pop(context);
   }
 
@@ -2094,7 +2136,7 @@ class _CreatePostSheetState extends State<_CreatePostSheet> {
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.close_rounded),
           ),
-          title: const Text('New post'),
+          title: Text(_isEditing ? 'Edit post' : 'New post'),
           centerTitle: true,
         ),
         body: SafeArea(
@@ -2184,6 +2226,7 @@ class _CreatePostSheetState extends State<_CreatePostSheet> {
                     const SizedBox(height: 16),
                     _CreatePostActionBar(
                       canPost: _canPost,
+                      postLabel: _isEditing ? 'Save' : 'Post',
                       onAddPhoto: () async {
                         final images = await pickDeviceImages();
                         if (images.isNotEmpty && mounted) {
@@ -2206,11 +2249,13 @@ class _CreatePostSheetState extends State<_CreatePostSheet> {
 class _CreatePostActionBar extends StatelessWidget {
   const _CreatePostActionBar({
     required this.canPost,
+    required this.postLabel,
     required this.onAddPhoto,
     required this.onPost,
   });
 
   final bool canPost;
+  final String postLabel;
   final Future<void> Function() onAddPhoto;
   final VoidCallback onPost;
 
@@ -2226,7 +2271,7 @@ class _CreatePostActionBar extends StatelessWidget {
         const Spacer(),
         FilledButton(
           onPressed: canPost ? onPost : null,
-          child: const Text('Post'),
+          child: Text(postLabel),
         ),
       ],
     );
