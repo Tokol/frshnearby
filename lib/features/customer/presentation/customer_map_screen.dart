@@ -22,9 +22,6 @@ import '../../customer_marketplace/presentation/customer_marketplace_controller.
 import 'farm_buying_sheet.dart';
 import 'followed_farms_controller.dart';
 
-/// Selectable search radii (km) shown in the distance filter.
-const _radiusOptions = <double>[2, 5, 10, 25];
-
 /// Basemap config. To switch to the real Mapbox cartoon style later, paste a
 /// public token (and optionally a Studio style as `username/styleId`). While
 /// [_mapboxToken] is empty the map renders a stylized OpenStreetMap basemap.
@@ -71,7 +68,10 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
   String? _selectedCategoryId;
   bool _followingOnly = false;
   bool _deliveryOnly = false;
-  double _radiusKm = 25;
+
+  /// Distance derived from the live map view; shrinks as you zoom in, grows as
+  /// you zoom out. Filters both the markers and the carousel list.
+  double _viewRadiusKm = 3;
   String? _selectedFarmId;
 
   /// Map-first by default (Snap-style). Toggles to the synced carousel list.
@@ -113,7 +113,7 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
           final allFarms = _buildFarms(items, userLocation, locale);
           final categories = _categoryOptions(items, locale);
           final farms = allFarms.where((farm) {
-            if (farm.distanceKm > _radiusKm) return false;
+            if (farm.distanceKm > _viewRadiusKm) return false;
             if (_selectedCategoryId != null &&
                 !farm.categoryIds.contains(_selectedCategoryId)) {
               return false;
@@ -133,9 +133,10 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
                     controller: _mapController,
                     farms: farms,
                     userLocation: userLocation,
-                    radiusKm: _radiusKm,
+                    radiusKm: _viewRadiusKm,
                     selectedFarmId: _selectedFarmId,
                     onFarmTap: (farm) => _onStickerTap(farms, farm),
+                    onViewRadiusChanged: _onViewRadiusChanged,
                   ),
                 ),
                 Positioned(
@@ -149,7 +150,7 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
                     selectedCategoryId: _selectedCategoryId,
                     followingOnly: _followingOnly,
                     deliveryOnly: _deliveryOnly,
-                    radiusKm: _radiusKm,
+                    radiusKm: _viewRadiusKm,
                     onBack: () => context.go(AppRoutes.customerHome),
                     onSearch: () => context.push(AppRoutes.customerSearch),
                     onCategorySelected: (id) =>
@@ -158,8 +159,6 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
                         _updateFilters(() => _followingOnly = !_followingOnly),
                     onToggleDelivery: () =>
                         _updateFilters(() => _deliveryOnly = !_deliveryOnly),
-                    onRadiusSelected: (value) =>
-                        _updateFilters(() => _radiusKm = value),
                   ),
                 ),
                 Positioned(
@@ -258,6 +257,15 @@ class _CustomerMapScreenState extends ConsumerState<CustomerMapScreen> {
     final farm = farms[index];
     setState(() => _selectedFarmId = farm.farmer.id);
     _mapController.move(farm.position, math.max(_mapController.camera.zoom, 13));
+  }
+
+  void _onViewRadiusChanged(double radiusKm) {
+    if (!mounted) return;
+    // Round so we only rebuild when the visible distance meaningfully changes,
+    // not on every frame of a pinch/zoom gesture.
+    final rounded = double.parse(radiusKm.clamp(0.3, 200).toStringAsFixed(1));
+    if (rounded == _viewRadiusKm) return;
+    setState(() => _viewRadiusKm = rounded);
   }
 
   void _recenter(MarketplaceLocation location) {
@@ -424,6 +432,7 @@ class _OpenFarmMap extends StatelessWidget {
     required this.radiusKm,
     required this.selectedFarmId,
     required this.onFarmTap,
+    required this.onViewRadiusChanged,
   });
 
   final MapController controller;
@@ -432,6 +441,20 @@ class _OpenFarmMap extends StatelessWidget {
   final double radiusKm;
   final String? selectedFarmId;
   final ValueChanged<_FarmMapMarker> onFarmTap;
+  final ValueChanged<double> onViewRadiusChanged;
+
+  /// How far (km) the current map view reaches from its centre — used as the
+  /// live distance shown in the chip and to filter farms to the visible area.
+  double _radiusFromCamera(MapCamera camera) {
+    final bounds = camera.visibleBounds;
+    final center = camera.center;
+    const distance = Distance();
+    return distance.as(
+      LengthUnit.Kilometer,
+      center,
+      LatLng(bounds.north, center.longitude),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -445,6 +468,9 @@ class _OpenFarmMap extends StatelessWidget {
         initialZoom: 14.5,
         minZoom: 3,
         maxZoom: 18,
+        onMapReady: () => onViewRadiusChanged(_radiusFromCamera(controller.camera)),
+        onPositionChanged: (camera, _) =>
+            onViewRadiusChanged(_radiusFromCamera(camera)),
         interactionOptions: const InteractionOptions(
           flags:
               InteractiveFlag.drag |
@@ -772,7 +798,6 @@ class _MapTopBar extends StatelessWidget {
     required this.onCategorySelected,
     required this.onToggleFollowing,
     required this.onToggleDelivery,
-    required this.onRadiusSelected,
   });
 
   final String locationName;
@@ -787,7 +812,6 @@ class _MapTopBar extends StatelessWidget {
   final ValueChanged<String?> onCategorySelected;
   final VoidCallback onToggleFollowing;
   final VoidCallback onToggleDelivery;
-  final ValueChanged<double> onRadiusSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -870,9 +894,20 @@ class _MapTopBar extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              _RadiusFilterChip(
-                radiusKm: radiusKm,
-                onSelected: onRadiusSelected,
+              _ChipShell(
+                selected: true,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.near_me_outlined, size: 15),
+                    const SizedBox(width: 6),
+                    Text(
+                      radiusKm >= 10
+                          ? '${radiusKm.toStringAsFixed(0)} km'
+                          : '${radiusKm.toStringAsFixed(1)} km',
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 8),
               _FilterChip(
@@ -906,40 +941,6 @@ class _MapTopBar extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _RadiusFilterChip extends StatelessWidget {
-  const _RadiusFilterChip({required this.radiusKm, required this.onSelected});
-
-  final double radiusKm;
-  final ValueChanged<double> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<double>(
-      tooltip: 'Search radius',
-      onSelected: onSelected,
-      itemBuilder: (context) => [
-        for (final option in _radiusOptions)
-          PopupMenuItem(
-            value: option,
-            child: Text('Within ${option.toStringAsFixed(0)} km'),
-          ),
-      ],
-      child: _ChipShell(
-        selected: true,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.near_me_outlined, size: 15),
-            const SizedBox(width: 6),
-            Text('${radiusKm.toStringAsFixed(0)} km'),
-            const Icon(Icons.arrow_drop_down_rounded, size: 18),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -1051,21 +1052,23 @@ class _FarmCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    return SizedBox(
-      height: 196 + bottomInset,
-      child: PageView.builder(
-        controller: controller,
-        onPageChanged: onPageChanged,
-        padEnds: false,
-        itemCount: farms.length,
-        itemBuilder: (context, index) {
-          final farm = farms[index];
-          return Padding(
-            padding: EdgeInsets.fromLTRB(12, 6, 4, 12 + bottomInset),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 460),
+    // Cap the whole carousel so pages stay close together (with a small peek)
+    // on wide/desktop screens instead of leaving a large gap between cards.
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: SizedBox(
+          height: 196 + bottomInset,
+          child: PageView.builder(
+            controller: controller,
+            onPageChanged: onPageChanged,
+            padEnds: false,
+            itemCount: farms.length,
+            itemBuilder: (context, index) {
+              final farm = farms[index];
+              return Padding(
+                padding: EdgeInsets.fromLTRB(12, 6, 4, 12 + bottomInset),
                 child: _FarmCard(
                   farm: farm,
                   followed: followed.contains(farm.farmer.id),
@@ -1073,10 +1076,10 @@ class _FarmCarousel extends StatelessWidget {
                   onProductTap: (listing) => onProductTap(farm, listing),
                   onToggleFollow: () => onToggleFollow(farm),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -1206,30 +1209,112 @@ class _FarmCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (var i = 0; i < shown.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    Expanded(
-                      child: _ProductThumb(
-                        listing: shown[i],
-                        locale: farm.locale,
-                        onTap: () => onProductTap(shown[i]),
+              if (listings.length == 1)
+                _SingleProductRow(
+                  listing: listings.first,
+                  locale: farm.locale,
+                  onTap: () => onProductTap(listings.first),
+                )
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0; i < shown.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 8),
+                      Expanded(
+                        child: _ProductThumb(
+                          listing: shown[i],
+                          locale: farm.locale,
+                          onTap: () => onProductTap(shown[i]),
+                        ),
                       ),
-                    ),
+                    ],
+                    if (hasOverflow) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MoreThumb(count: overflow, onTap: onTap),
+                      ),
+                    ],
                   ],
-                  if (hasOverflow) ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _MoreThumb(count: overflow, onTap: onTap),
-                    ),
-                  ],
-                ],
-              ),
+                ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SingleProductRow extends StatelessWidget {
+  const _SingleProductRow({
+    required this.listing,
+    required this.locale,
+    required this.onTap,
+  });
+
+  final CustomerListing listing;
+  final String locale;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final name = listing.variantName(locale) ?? listing.productName(locale);
+    final item = listing.listing;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox(
+              width: 88,
+              height: 88,
+              child: FarmListingImage(assetPath: farmListingAsset(listing)),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${item.price.toStringAsFixed(2)} / ${item.unit}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${formatListingQuantity(item.quantity)} ${item.unit} available',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: theme.colorScheme.primary,
+          ),
+        ],
       ),
     );
   }
