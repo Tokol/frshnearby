@@ -1062,12 +1062,18 @@ class _FarmCarousel extends StatelessWidget {
           final farm = farms[index];
           return Padding(
             padding: EdgeInsets.fromLTRB(12, 6, 4, 12 + bottomInset),
-            child: _FarmCard(
-              farm: farm,
-              followed: followed.contains(farm.farmer.id),
-              onTap: () => onCardTap(farm),
-              onProductTap: (listing) => onProductTap(farm, listing),
-              onToggleFollow: () => onToggleFollow(farm),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: _FarmCard(
+                  farm: farm,
+                  followed: followed.contains(farm.farmer.id),
+                  onTap: () => onCardTap(farm),
+                  onProductTap: (listing) => onProductTap(farm, listing),
+                  onToggleFollow: () => onToggleFollow(farm),
+                ),
+              ),
             ),
           );
         },
@@ -1253,8 +1259,9 @@ class _ProductThumb extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: AspectRatio(
-              aspectRatio: 1,
+            child: SizedBox(
+              height: 64,
+              width: double.infinity,
               child: FarmListingImage(assetPath: farmListingAsset(listing)),
             ),
           ),
@@ -1298,8 +1305,9 @@ class _MoreThumb extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          AspectRatio(
-            aspectRatio: 1,
+          SizedBox(
+            height: 64,
+            width: double.infinity,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
