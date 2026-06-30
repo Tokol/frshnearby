@@ -21,7 +21,7 @@ import '../../social_feed/presentation/social_feed_controller.dart';
 class FarmerDashboardScreen extends ConsumerWidget {
   const FarmerDashboardScreen({super.key});
 
-  static const farmUrl = 'http://127.0.0.1:5173/#/customer/farmers/farmer-1';
+  static const farmUrl = 'frshnearby/northfieldfarm';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
