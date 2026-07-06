@@ -1247,4 +1247,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifiedCustomerLabel => 'Verified customer';
+
+  @override
+  String get landingNavAbout => 'About us';
+
+  @override
+  String get landingNavInterested => 'Interested?';
+
+  @override
+  String get landingNavPrototype => 'Open prototype';
+
+  @override
+  String get landingHeroKicker => 'From local soil to your table';
+
+  @override
+  String get landingHeroTitle => 'Local food, closer.';
+
+  @override
+  String get landingHeroSubtitle =>
+      'FRSH connects you with farms and local producers near you — fresh, fair, and in season.';
+
+  @override
+  String get landingHeroPrimaryCta => 'Get early access';
+
+  @override
+  String get landingHeroSecondaryCta => 'Open the prototype';
+
+  @override
+  String get landingMapBadge => 'Launching first in Vaasa, Finland';
+
+  @override
+  String get landingMapCaption => 'Built for local food across Europe';
+
+  @override
+  String get landingAboutTitle => 'About us';
+
+  @override
+  String get landingAboutBody =>
+      'FRSH Nearby started with a simple idea: the best food is grown next door. We build tools that make it effortless for people to find nearby farms — and for farmers to sell directly, at a fair price, without middlemen. What begins in Vaasa, Finland, is growing into a network for local food across Europe.';
+
+  @override
+  String get landingValue1Title => 'Truly local';
+
+  @override
+  String get landingValue1Body =>
+      'Find fresh food grown and made near you, always in season.';
+
+  @override
+  String get landingValue2Title => 'Fair for farmers';
+
+  @override
+  String get landingValue2Body =>
+      'Farmers sell directly, set their own prices, and build lasting trust.';
+
+  @override
+  String get landingValue3Title => 'Stronger communities';
+
+  @override
+  String get landingValue3Body =>
+      'Every order keeps value in your region and strengthens local food networks.';
+
+  @override
+  String get landingInterestedTitle => 'Interested?';
+
+  @override
+  String get landingInterestedSubtitle =>
+      'Join the early-access list and be first to try FRSH in your area.';
+
+  @override
+  String get landingFormRoleLabel => 'Role';
+
+  @override
+  String get landingFormMessageLabel => 'Optional message';
+
+  @override
+  String get landingRoleConsumer => 'Consumer';
+
+  @override
+  String get landingRoleFarmer => 'Farmer / Producer';
+
+  @override
+  String get landingRoleRestaurant => 'Restaurant / Buyer';
+
+  @override
+  String get landingRoleSupporter => 'Local food supporter';
+
+  @override
+  String get landingFormSubmit => 'Join early access';
+
+  @override
+  String get landingFormThanks =>
+      'Thank you. You\'re on the early access list.';
+
+  @override
+  String get landingFooterTagline => 'Grown nearby. Delivered fresh.';
+
+  @override
+  String get landingFooterCopyright => '© 2026 FRSH Nearby';
+
+  @override
+  String get prototypeChooserTitle => 'Open the FRSH Nearby prototype';
+
+  @override
+  String get prototypeChooserSubtitle =>
+      'Pick the side you want to test first.';
+
+  @override
+  String get prototypeFarmerHint => 'Dashboard, orders, listings, insights';
+
+  @override
+  String get prototypeConsumerHint => 'Nearby food, farm profiles, deals, chat';
+
+  @override
+  String get landingFormPhoneLabel => 'Phone (optional)';
 }

@@ -1249,4 +1249,118 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get verifiedCustomerLabel => 'Verifierad kund';
+
+  @override
+  String get landingNavAbout => 'Om oss';
+
+  @override
+  String get landingNavInterested => 'Intresserad?';
+
+  @override
+  String get landingNavPrototype => 'Öppna prototypen';
+
+  @override
+  String get landingHeroKicker => 'Från lokal jord till ditt bord';
+
+  @override
+  String get landingHeroTitle => 'Närproducerat, närmare.';
+
+  @override
+  String get landingHeroSubtitle =>
+      'FRSH kopplar samman dig med gårdar och lokala producenter nära dig — färskt, rättvist och i säsong.';
+
+  @override
+  String get landingHeroPrimaryCta => 'Få tidig tillgång';
+
+  @override
+  String get landingHeroSecondaryCta => 'Öppna prototypen';
+
+  @override
+  String get landingMapBadge => 'Lanseras först i Vasa, Finland';
+
+  @override
+  String get landingMapCaption => 'Byggt för närproducerad mat i hela Europa';
+
+  @override
+  String get landingAboutTitle => 'Om oss';
+
+  @override
+  String get landingAboutBody =>
+      'FRSH Nearby föddes ur en enkel idé: den bästa maten odlas granngårds. Vi bygger verktyg som gör det enkelt att hitta gårdar nära dig — och som låter bönder sälja direkt, till ett rättvist pris, utan mellanhänder. Det som börjar i Vasa, Finland, växer till ett nätverk för närproducerad mat i hela Europa.';
+
+  @override
+  String get landingValue1Title => 'Äkta lokalt';
+
+  @override
+  String get landingValue1Body =>
+      'Hitta färsk mat som odlats och tillverkats nära dig, alltid i säsong.';
+
+  @override
+  String get landingValue2Title => 'Rättvist för bönder';
+
+  @override
+  String get landingValue2Body =>
+      'Bönder säljer direkt, sätter sina egna priser och bygger varaktigt förtroende.';
+
+  @override
+  String get landingValue3Title => 'Starkare samhällen';
+
+  @override
+  String get landingValue3Body =>
+      'Varje beställning behåller värdet i din region och stärker lokala matnätverk.';
+
+  @override
+  String get landingInterestedTitle => 'Intresserad?';
+
+  @override
+  String get landingInterestedSubtitle =>
+      'Gå med på listan för tidig tillgång och bli först med att prova FRSH där du bor.';
+
+  @override
+  String get landingFormRoleLabel => 'Roll';
+
+  @override
+  String get landingFormMessageLabel => 'Valfritt meddelande';
+
+  @override
+  String get landingRoleConsumer => 'Konsument';
+
+  @override
+  String get landingRoleFarmer => 'Bonde / Producent';
+
+  @override
+  String get landingRoleRestaurant => 'Restaurang / Köpare';
+
+  @override
+  String get landingRoleSupporter => 'Vän av närproducerat';
+
+  @override
+  String get landingFormSubmit => 'Gå med i tidig tillgång';
+
+  @override
+  String get landingFormThanks =>
+      'Tack! Du står nu på listan för tidig tillgång.';
+
+  @override
+  String get landingFooterTagline => 'Odlat nära. Levererat färskt.';
+
+  @override
+  String get landingFooterCopyright => '© 2026 FRSH Nearby';
+
+  @override
+  String get prototypeChooserTitle => 'Öppna FRSH Nearby-prototypen';
+
+  @override
+  String get prototypeChooserSubtitle => 'Välj den sida du vill testa först.';
+
+  @override
+  String get prototypeFarmerHint =>
+      'Översikt, beställningar, annonser, insikter';
+
+  @override
+  String get prototypeConsumerHint =>
+      'Närmat, gårdsprofiler, erbjudanden, chatt';
+
+  @override
+  String get landingFormPhoneLabel => 'Telefonnummer (valfritt)';
 }

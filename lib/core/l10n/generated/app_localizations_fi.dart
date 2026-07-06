@@ -1253,4 +1253,118 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get verifiedCustomerLabel => 'Vahvistettu asiakas';
+
+  @override
+  String get landingNavAbout => 'Meistä';
+
+  @override
+  String get landingNavInterested => 'Kiinnostuitko?';
+
+  @override
+  String get landingNavPrototype => 'Avaa prototyyppi';
+
+  @override
+  String get landingHeroKicker => 'Paikallisesta mullasta pöytääsi';
+
+  @override
+  String get landingHeroTitle => 'Lähiruokaa, lähempänä.';
+
+  @override
+  String get landingHeroSubtitle =>
+      'FRSH yhdistää sinut lähellä oleviin tiloihin ja paikallisiin tuottajiin — tuoretta, reilua ja sesongin mukaan.';
+
+  @override
+  String get landingHeroPrimaryCta => 'Liity ennakkokäyttäjäksi';
+
+  @override
+  String get landingHeroSecondaryCta => 'Avaa prototyyppi';
+
+  @override
+  String get landingMapBadge => 'Aloitamme Vaasasta, Suomesta';
+
+  @override
+  String get landingMapCaption =>
+      'Rakennettu lähiruoalle kaikkialla Euroopassa';
+
+  @override
+  String get landingAboutTitle => 'Meistä';
+
+  @override
+  String get landingAboutBody =>
+      'FRSH Nearby syntyi yksinkertaisesta ajatuksesta: paras ruoka kasvaa naapurissa. Rakennamme työkaluja, joiden avulla ihmiset löytävät lähitilat vaivattomasti — ja viljelijät voivat myydä suoraan, reiluun hintaan, ilman välikäsiä. Vaasasta alkava matka kasvaa lähiruoan verkostoksi ympäri Eurooppaa.';
+
+  @override
+  String get landingValue1Title => 'Aidosti paikallista';
+
+  @override
+  String get landingValue1Body =>
+      'Löydä lähellä kasvatettua ja valmistettua tuoretta ruokaa, aina sesongissa.';
+
+  @override
+  String get landingValue2Title => 'Reilua viljelijöille';
+
+  @override
+  String get landingValue2Body =>
+      'Viljelijät myyvät suoraan, hinnoittelevat itse ja rakentavat kestävää luottamusta.';
+
+  @override
+  String get landingValue3Title => 'Vahvemmat yhteisöt';
+
+  @override
+  String get landingValue3Body =>
+      'Jokainen tilaus pitää arvon omalla alueellasi ja vahvistaa paikallisia ruokaverkostoja.';
+
+  @override
+  String get landingInterestedTitle => 'Kiinnostuitko?';
+
+  @override
+  String get landingInterestedSubtitle =>
+      'Liity ennakkokäyttäjälistalle ja kokeile FRSH:ta ensimmäisten joukossa.';
+
+  @override
+  String get landingFormRoleLabel => 'Rooli';
+
+  @override
+  String get landingFormMessageLabel => 'Vapaaehtoinen viesti';
+
+  @override
+  String get landingRoleConsumer => 'Kuluttaja';
+
+  @override
+  String get landingRoleFarmer => 'Viljelijä / Tuottaja';
+
+  @override
+  String get landingRoleRestaurant => 'Ravintola / Ostaja';
+
+  @override
+  String get landingRoleSupporter => 'Lähiruoan ystävä';
+
+  @override
+  String get landingFormSubmit => 'Liity ennakkokäyttäjäksi';
+
+  @override
+  String get landingFormThanks => 'Kiitos! Olet nyt ennakkokäyttäjälistalla.';
+
+  @override
+  String get landingFooterTagline => 'Kasvatettu lähellä. Toimitettu tuoreena.';
+
+  @override
+  String get landingFooterCopyright => '© 2026 FRSH Nearby';
+
+  @override
+  String get prototypeChooserTitle => 'Avaa FRSH Nearby -prototyyppi';
+
+  @override
+  String get prototypeChooserSubtitle =>
+      'Valitse puoli, jota haluat kokeilla ensin.';
+
+  @override
+  String get prototypeFarmerHint =>
+      'Kojelauta, tilaukset, ilmoitukset, tilastot';
+
+  @override
+  String get prototypeConsumerHint => 'Lähiruoka, tilaprofiilit, diilit, chat';
+
+  @override
+  String get landingFormPhoneLabel => 'Puhelinnumero (valinnainen)';
 }

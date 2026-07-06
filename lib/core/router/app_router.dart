@@ -31,6 +31,7 @@ import '../../features/listings/presentation/create_listing_screen.dart';
 import '../../features/listings/presentation/edit_listing_screen.dart';
 import '../../features/listings/presentation/listing_preview_screen.dart';
 import '../../features/marketing/presentation/marketing_home_screen.dart';
+import '../../features/marketing/presentation/prototype_home_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shared/presentation/app_shell.dart';
 import '../../features/social_feed/domain/feed_post.dart';
@@ -96,7 +97,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.prototype,
-        builder: (context, state) => const MarketingHomeScreen(),
+        builder: (context, state) => const PrototypeHomeScreen(),
       ),
       GoRoute(
         path: AppRoutes.splash,

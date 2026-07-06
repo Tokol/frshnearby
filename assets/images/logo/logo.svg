@@ -1,0 +1,36 @@
+<svg viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="220" fill="#FFFFFF"/>
+
+  <!-- Icon: minimalist map-pin with negative-space sprout -->
+  <g>
+    <path d="M95,10
+             C50,10 15,45 15,90
+             C15,140 95,205 95,205
+             C95,205 175,140 175,90
+             C175,45 140,10 95,10 Z"
+          fill="#1E7A42"/>
+
+    <!-- sprout stem -->
+    <line x1="95" y1="150" x2="95" y2="98" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
+
+    <!-- left leaf -->
+    <path d="M95,112 C70,106 55,86 65,60 C86,69 96,90 95,112 Z" fill="#FFFFFF"/>
+    <!-- right leaf -->
+    <path d="M95,112 C120,106 135,86 125,60 C104,69 94,90 95,112 Z" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="228" y="132"
+        font-family="'Helvetica Neue', Arial, sans-serif"
+        font-weight="800"
+        font-size="96"
+        letter-spacing="-1"
+        fill="#222222">FRSH</text>
+
+  <text x="231" y="176"
+        font-family="'Helvetica Neue', Arial, sans-serif"
+        font-weight="600"
+        font-size="24"
+        letter-spacing="7"
+        fill="#1E7A42">NEARBY</text>
+</svg>

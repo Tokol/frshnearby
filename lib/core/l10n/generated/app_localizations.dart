@@ -2385,6 +2385,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verified customer'**
   String get verifiedCustomerLabel;
+
+  /// No description provided for @landingNavAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About us'**
+  String get landingNavAbout;
+
+  /// No description provided for @landingNavInterested.
+  ///
+  /// In en, this message translates to:
+  /// **'Interested?'**
+  String get landingNavInterested;
+
+  /// No description provided for @landingNavPrototype.
+  ///
+  /// In en, this message translates to:
+  /// **'Open prototype'**
+  String get landingNavPrototype;
+
+  /// No description provided for @landingHeroKicker.
+  ///
+  /// In en, this message translates to:
+  /// **'From local soil to your table'**
+  String get landingHeroKicker;
+
+  /// No description provided for @landingHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local food, closer.'**
+  String get landingHeroTitle;
+
+  /// No description provided for @landingHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'FRSH connects you with farms and local producers near you — fresh, fair, and in season.'**
+  String get landingHeroSubtitle;
+
+  /// No description provided for @landingHeroPrimaryCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Get early access'**
+  String get landingHeroPrimaryCta;
+
+  /// No description provided for @landingHeroSecondaryCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the prototype'**
+  String get landingHeroSecondaryCta;
+
+  /// No description provided for @landingMapBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Launching first in Vaasa, Finland'**
+  String get landingMapBadge;
+
+  /// No description provided for @landingMapCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Built for local food across Europe'**
+  String get landingMapCaption;
+
+  /// No description provided for @landingAboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About us'**
+  String get landingAboutTitle;
+
+  /// No description provided for @landingAboutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'FRSH Nearby started with a simple idea: the best food is grown next door. We build tools that make it effortless for people to find nearby farms — and for farmers to sell directly, at a fair price, without middlemen. What begins in Vaasa, Finland, is growing into a network for local food across Europe.'**
+  String get landingAboutBody;
+
+  /// No description provided for @landingValue1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Truly local'**
+  String get landingValue1Title;
+
+  /// No description provided for @landingValue1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Find fresh food grown and made near you, always in season.'**
+  String get landingValue1Body;
+
+  /// No description provided for @landingValue2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair for farmers'**
+  String get landingValue2Title;
+
+  /// No description provided for @landingValue2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmers sell directly, set their own prices, and build lasting trust.'**
+  String get landingValue2Body;
+
+  /// No description provided for @landingValue3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Stronger communities'**
+  String get landingValue3Title;
+
+  /// No description provided for @landingValue3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Every order keeps value in your region and strengthens local food networks.'**
+  String get landingValue3Body;
+
+  /// No description provided for @landingInterestedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interested?'**
+  String get landingInterestedTitle;
+
+  /// No description provided for @landingInterestedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the early-access list and be first to try FRSH in your area.'**
+  String get landingInterestedSubtitle;
+
+  /// No description provided for @landingFormRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get landingFormRoleLabel;
+
+  /// No description provided for @landingFormMessageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional message'**
+  String get landingFormMessageLabel;
+
+  /// No description provided for @landingRoleConsumer.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumer'**
+  String get landingRoleConsumer;
+
+  /// No description provided for @landingRoleFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer / Producer'**
+  String get landingRoleFarmer;
+
+  /// No description provided for @landingRoleRestaurant.
+  ///
+  /// In en, this message translates to:
+  /// **'Restaurant / Buyer'**
+  String get landingRoleRestaurant;
+
+  /// No description provided for @landingRoleSupporter.
+  ///
+  /// In en, this message translates to:
+  /// **'Local food supporter'**
+  String get landingRoleSupporter;
+
+  /// No description provided for @landingFormSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Join early access'**
+  String get landingFormSubmit;
+
+  /// No description provided for @landingFormThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you. You\'re on the early access list.'**
+  String get landingFormThanks;
+
+  /// No description provided for @landingFooterTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Grown nearby. Delivered fresh.'**
+  String get landingFooterTagline;
+
+  /// No description provided for @landingFooterCopyright.
+  ///
+  /// In en, this message translates to:
+  /// **'© 2026 FRSH Nearby'**
+  String get landingFooterCopyright;
+
+  /// No description provided for @prototypeChooserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the FRSH Nearby prototype'**
+  String get prototypeChooserTitle;
+
+  /// No description provided for @prototypeChooserSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the side you want to test first.'**
+  String get prototypeChooserSubtitle;
+
+  /// No description provided for @prototypeFarmerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard, orders, listings, insights'**
+  String get prototypeFarmerHint;
+
+  /// No description provided for @prototypeConsumerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby food, farm profiles, deals, chat'**
+  String get prototypeConsumerHint;
+
+  /// No description provided for @landingFormPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone (optional)'**
+  String get landingFormPhoneLabel;
 }
 
 class _AppLocalizationsDelegate
