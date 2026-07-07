@@ -15,21 +15,10 @@ class LandingFooter extends StatelessWidget {
       children: [
         const Divider(color: LandingColors.line, height: 1),
         const SizedBox(height: 26),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.eco_rounded, color: LandingColors.green, size: 20),
-            const SizedBox(width: 8),
-            const Text(
-              'FRSH nearby',
-              style: TextStyle(
-                color: LandingColors.ink,
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-                letterSpacing: 0.4,
-              ),
-            ),
-          ],
+        Image.asset(
+          'assets/images/logo/frshnearby.png',
+          height: 34,
+          fit: BoxFit.contain,
         ),
         const SizedBox(height: 6),
         Text(

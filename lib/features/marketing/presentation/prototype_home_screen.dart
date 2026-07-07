@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
@@ -116,7 +115,13 @@ class _PrototypeBrandStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [SvgPicture.asset('assets/images/logo/logo.svg', height: 42)],
+      children: [
+        Image.asset(
+          'assets/images/logo/frshnearby.png',
+          height: 40,
+          fit: BoxFit.contain,
+        ),
+      ],
     );
   }
 }

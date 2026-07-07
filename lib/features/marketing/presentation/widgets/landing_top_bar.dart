@@ -80,40 +80,10 @@ class _Wordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: LandingColors.green,
-            borderRadius: BorderRadius.circular(11),
-          ),
-          child: const Icon(Icons.eco_rounded, color: Colors.white, size: 22),
-        ),
-        const SizedBox(width: 10),
-        Text.rich(
-          TextSpan(
-            children: [
-              const TextSpan(
-                text: 'FRSH',
-                style: TextStyle(color: LandingColors.ink),
-              ),
-              if (!compact)
-                const TextSpan(
-                  text: ' NEARBY',
-                  style: TextStyle(color: LandingColors.green),
-                ),
-            ],
-          ),
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.4,
-          ),
-        ),
-      ],
+    return Image.asset(
+      'assets/images/logo/frshnearby.png',
+      height: compact ? 30 : 38,
+      fit: BoxFit.contain,
     );
   }
 }
