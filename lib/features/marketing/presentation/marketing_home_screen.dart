@@ -50,9 +50,8 @@ class _MarketingHomeScreenState extends ConsumerState<MarketingHomeScreen> {
       email: _emailController.text.trim(),
       role: switch (_role) {
         EarlyAccessRole.consumer => 'Consumer',
-        EarlyAccessRole.farmer => 'Farmer / Producer',
-        EarlyAccessRole.restaurant => 'Restaurant / Buyer',
-        EarlyAccessRole.supporter => 'Local food supporter',
+        EarlyAccessRole.farmer => 'Food producer',
+        EarlyAccessRole.restaurant => 'Restaurant / Shop',
       },
       country: _countryController.text.trim(),
       phone: _phoneController.text.trim(),

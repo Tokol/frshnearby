@@ -15,7 +15,7 @@ class FreshFarmApp extends ConsumerWidget {
     final settingsState = ref.watch(settingsControllerProvider);
 
     return MaterialApp.router(
-      onGenerateTitle: (context) => AppLocalizations.of(context).appName,
+      onGenerateTitle: (context) => 'FRSH nearby',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       routerConfig: router,

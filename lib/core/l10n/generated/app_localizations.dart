@@ -2413,13 +2413,13 @@ abstract class AppLocalizations {
   /// No description provided for @landingHeroTitle.
   ///
   /// In en, this message translates to:
-  /// **'Local food, closer.'**
+  /// **'Making local food consumption easy.'**
   String get landingHeroTitle;
 
   /// No description provided for @landingHeroSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'FRSH connects you with farms and local producers near you — fresh, fair, and in season.'**
+  /// **'FRSH Nearby connects you directly to local food producers near you — cutting out middle parties, reducing costs and increasing freshness.'**
   String get landingHeroSubtitle;
 
   /// No description provided for @landingHeroPrimaryCta.
@@ -2455,31 +2455,31 @@ abstract class AppLocalizations {
   /// No description provided for @landingAboutBody.
   ///
   /// In en, this message translates to:
-  /// **'FRSH Nearby started with a simple idea: the best food is grown next door. We build tools that make it effortless for people to find nearby farms — and for farmers to sell directly, at a fair price, without middlemen. What begins in Vaasa, Finland, is growing into a network for local food across Europe.'**
+  /// **'FRSH Nearby started with a simple idea: the best food is grown next door. We are building a platform that makes it effortless for consumers to access locally produced food — making it easier for food producers to sell directly to the consumer, cutting out middle parties. The platform is built by three newly graduated university students, together with local food producers. Fresh, easy and fair.'**
   String get landingAboutBody;
 
   /// No description provided for @landingValue1Title.
   ///
   /// In en, this message translates to:
-  /// **'Truly local'**
+  /// **'Local'**
   String get landingValue1Title;
 
   /// No description provided for @landingValue1Body.
   ///
   /// In en, this message translates to:
-  /// **'Find fresh food grown and made near you, always in season.'**
+  /// **'Find fresh food produced near you, always in season.'**
   String get landingValue1Body;
 
   /// No description provided for @landingValue2Title.
   ///
   /// In en, this message translates to:
-  /// **'Fair for farmers'**
+  /// **'Fair for food producers'**
   String get landingValue2Title;
 
   /// No description provided for @landingValue2Body.
   ///
   /// In en, this message translates to:
-  /// **'Farmers sell directly, set their own prices, and build lasting trust.'**
+  /// **'Producers sell directly to end customers in the most convenient way agreed upon, increasing profits for producers and reducing costs for consumers.'**
   String get landingValue2Body;
 
   /// No description provided for @landingValue3Title.
@@ -2503,7 +2503,7 @@ abstract class AppLocalizations {
   /// No description provided for @landingInterestedSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Join the early-access list and be first to try FRSH in your area.'**
+  /// **'Join the waiting list and get notified when FRSH Nearby launches.'**
   String get landingInterestedSubtitle;
 
   /// No description provided for @landingFormRoleLabel.
@@ -2527,13 +2527,13 @@ abstract class AppLocalizations {
   /// No description provided for @landingRoleFarmer.
   ///
   /// In en, this message translates to:
-  /// **'Farmer / Producer'**
+  /// **'Food producer'**
   String get landingRoleFarmer;
 
   /// No description provided for @landingRoleRestaurant.
   ///
   /// In en, this message translates to:
-  /// **'Restaurant / Buyer'**
+  /// **'Restaurant / Shop'**
   String get landingRoleRestaurant;
 
   /// No description provided for @landingRoleSupporter.
@@ -2545,7 +2545,7 @@ abstract class AppLocalizations {
   /// No description provided for @landingFormSubmit.
   ///
   /// In en, this message translates to:
-  /// **'Join early access'**
+  /// **'Join the waiting list'**
   String get landingFormSubmit;
 
   /// No description provided for @landingFormThanks.
@@ -2557,13 +2557,13 @@ abstract class AppLocalizations {
   /// No description provided for @landingFooterTagline.
   ///
   /// In en, this message translates to:
-  /// **'Grown nearby. Delivered fresh.'**
+  /// **'Find food produced near you.'**
   String get landingFooterTagline;
 
   /// No description provided for @landingFooterCopyright.
   ///
   /// In en, this message translates to:
-  /// **'© 2026 FRSH Nearby'**
+  /// **'© 2026 FRSH nearby'**
   String get landingFooterCopyright;
 
   /// No description provided for @prototypeChooserTitle.

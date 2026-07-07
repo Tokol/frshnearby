@@ -21,7 +21,7 @@ class LandingFooter extends StatelessWidget {
             const Icon(Icons.eco_rounded, color: LandingColors.green, size: 20),
             const SizedBox(width: 8),
             const Text(
-              'FRSH NEARBY',
+              'FRSH nearby',
               style: TextStyle(
                 color: LandingColors.ink,
                 fontWeight: FontWeight.w900,

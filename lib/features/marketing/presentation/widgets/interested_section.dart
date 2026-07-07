@@ -6,14 +6,13 @@ import 'landing_buttons.dart';
 
 /// Stable role values so the dropdown survives a mid-session locale switch
 /// (localized display labels are resolved at build time).
-enum EarlyAccessRole { consumer, farmer, restaurant, supporter }
+enum EarlyAccessRole { consumer, farmer, restaurant }
 
 extension EarlyAccessRoleLabel on EarlyAccessRole {
   String label(AppLocalizations l10n) => switch (this) {
     EarlyAccessRole.consumer => l10n.landingRoleConsumer,
     EarlyAccessRole.farmer => l10n.landingRoleFarmer,
     EarlyAccessRole.restaurant => l10n.landingRoleRestaurant,
-    EarlyAccessRole.supporter => l10n.landingRoleSupporter,
   };
 }
 

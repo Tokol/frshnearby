@@ -1261,11 +1261,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get landingHeroKicker => 'From local soil to your table';
 
   @override
-  String get landingHeroTitle => 'Local food, closer.';
+  String get landingHeroTitle => 'Making local food consumption easy.';
 
   @override
   String get landingHeroSubtitle =>
-      'FRSH connects you with farms and local producers near you — fresh, fair, and in season.';
+      'FRSH Nearby connects you directly to local food producers near you — cutting out middle parties, reducing costs and increasing freshness.';
 
   @override
   String get landingHeroPrimaryCta => 'Get early access';
@@ -1284,21 +1284,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get landingAboutBody =>
-      'FRSH Nearby started with a simple idea: the best food is grown next door. We build tools that make it effortless for people to find nearby farms — and for farmers to sell directly, at a fair price, without middlemen. What begins in Vaasa, Finland, is growing into a network for local food across Europe.';
+      'FRSH Nearby started with a simple idea: the best food is grown next door. We are building a platform that makes it effortless for consumers to access locally produced food — making it easier for food producers to sell directly to the consumer, cutting out middle parties. The platform is built by three newly graduated university students, together with local food producers. Fresh, easy and fair.';
 
   @override
-  String get landingValue1Title => 'Truly local';
+  String get landingValue1Title => 'Local';
 
   @override
   String get landingValue1Body =>
-      'Find fresh food grown and made near you, always in season.';
+      'Find fresh food produced near you, always in season.';
 
   @override
-  String get landingValue2Title => 'Fair for farmers';
+  String get landingValue2Title => 'Fair for food producers';
 
   @override
   String get landingValue2Body =>
-      'Farmers sell directly, set their own prices, and build lasting trust.';
+      'Producers sell directly to end customers in the most convenient way agreed upon, increasing profits for producers and reducing costs for consumers.';
 
   @override
   String get landingValue3Title => 'Stronger communities';
@@ -1312,7 +1312,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get landingInterestedSubtitle =>
-      'Join the early-access list and be first to try FRSH in your area.';
+      'Join the waiting list and get notified when FRSH Nearby launches.';
 
   @override
   String get landingFormRoleLabel => 'Role';
@@ -1324,26 +1324,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get landingRoleConsumer => 'Consumer';
 
   @override
-  String get landingRoleFarmer => 'Farmer / Producer';
+  String get landingRoleFarmer => 'Food producer';
 
   @override
-  String get landingRoleRestaurant => 'Restaurant / Buyer';
+  String get landingRoleRestaurant => 'Restaurant / Shop';
 
   @override
   String get landingRoleSupporter => 'Local food supporter';
 
   @override
-  String get landingFormSubmit => 'Join early access';
+  String get landingFormSubmit => 'Join the waiting list';
 
   @override
   String get landingFormThanks =>
       'Thank you. You\'re on the early access list.';
 
   @override
-  String get landingFooterTagline => 'Grown nearby. Delivered fresh.';
+  String get landingFooterTagline => 'Find food produced near you.';
 
   @override
-  String get landingFooterCopyright => '© 2026 FRSH Nearby';
+  String get landingFooterCopyright => '© 2026 FRSH nearby';
 
   @override
   String get prototypeChooserTitle => 'Open the FRSH Nearby prototype';

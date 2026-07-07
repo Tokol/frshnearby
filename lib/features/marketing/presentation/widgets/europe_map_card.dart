@@ -3,27 +3,23 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../core/l10n/generated/app_localizations.dart';
 import '../marketing_tokens.dart';
 
 /// Europe map with Finland highlighted and a pulsing marker over Vaasa.
 ///
-/// The SVG viewBox is 1000x684 and Vaasa sits at (650, 235); the marker is
-/// positioned with an [Alignment] inside a matching [AspectRatio], so the
-/// mapping stays exact at every width.
+/// The SVG viewBox is 1000x684 and Vaasa sits at (634, 228) — on Finland's
+/// west-coast bulge at the Kvarken narrows; the marker is positioned with an
+/// [Alignment] inside a matching [AspectRatio], so the mapping stays exact at
+/// every width.
 class EuropeMapCard extends StatelessWidget {
-  const EuropeMapCard({super.key, this.showCaption = true});
+  const EuropeMapCard({super.key});
 
-  final bool showCaption;
-
-  static const _vaasa = Alignment(650 / 1000 * 2 - 1, 235 / 684 * 2 - 1);
+  static const _vaasa = Alignment(634 / 1000 * 2 - 1, 228 / 684 * 2 - 1);
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return Semantics(
-      label: l10n.landingMapBadge,
+      label: 'Map of Europe',
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.86),
@@ -39,69 +35,41 @@ class EuropeMapCard extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         padding: const EdgeInsets.all(14),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1000 / 684,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: SvgPicture.asset(
-                      'assets/images/europe_clean.svg',
-                      fit: BoxFit.fill,
-                      placeholderBuilder: (context) => const SizedBox.expand(),
-                      errorBuilder: (context, error, stackTrace) =>
-                          SvgPicture.asset(
-                            'assets/images/europe_frsh_map.svg',
-                            fit: BoxFit.fill,
-                          ),
-                    ),
-                  ),
-                  const Align(
-                    alignment: _vaasa,
-                    child: PulsingMarker(size: 46),
-                  ),
-                ],
+        child: AspectRatio(
+          aspectRatio: 1000 / 684,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: SvgPicture.asset(
+                  'assets/images/europe_clean.svg',
+                  fit: BoxFit.fill,
+                  placeholderBuilder: (context) => const SizedBox.expand(),
+                  errorBuilder: (context, error, stackTrace) =>
+                      SvgPicture.asset(
+                        'assets/images/europe_frsh_map.svg',
+                        fit: BoxFit.fill,
+                      ),
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(
-                  Icons.place_rounded,
-                  size: 18,
-                  color: LandingColors.green,
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    l10n.landingMapBadge,
-                    style: const TextStyle(
-                      color: LandingColors.ink,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (showCaption) ...[
-              const SizedBox(height: 2),
-              Padding(
-                padding: const EdgeInsets.only(left: 24),
-                child: Text(
-                  l10n.landingMapCaption,
-                  style: const TextStyle(
-                    color: LandingColors.muted,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+              // The zero-size Align target pins the exact fractional point;
+              // the OverflowBox then paints the marker centered on it (a bare
+              // Align would offset the dot by half the child size).
+              const Align(
+                alignment: _vaasa,
+                child: SizedBox(
+                  width: 0,
+                  height: 0,
+                  child: OverflowBox(
+                    minWidth: 0,
+                    maxWidth: double.infinity,
+                    minHeight: 0,
+                    maxHeight: double.infinity,
+                    child: PulsingMarker(size: 46),
                   ),
                 ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
