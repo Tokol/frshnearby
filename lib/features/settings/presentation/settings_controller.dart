@@ -10,7 +10,7 @@ final settingsControllerProvider =
     });
 
 class SettingsState {
-  const SettingsState({this.locale = const Locale('en')});
+  const SettingsState({this.locale});
 
   final Locale? locale;
 

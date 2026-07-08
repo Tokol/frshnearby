@@ -18,12 +18,25 @@ class LanguageFlagPicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final selected =
-        ref.watch(settingsControllerProvider).locale?.languageCode ?? 'en';
+        ref.watch(settingsControllerProvider).locale?.languageCode ??
+        Localizations.localeOf(context).languageCode;
 
     final options = [
-      (code: 'en', asset: 'assets/images/flags/gb.svg', name: l10n.englishLanguage),
-      (code: 'fi', asset: 'assets/images/flags/fi.svg', name: l10n.finnishLanguage),
-      (code: 'sv', asset: 'assets/images/flags/se.svg', name: l10n.swedishLanguage),
+      (
+        code: 'en',
+        asset: 'assets/images/flags/gb.svg',
+        name: l10n.englishLanguage,
+      ),
+      (
+        code: 'fi',
+        asset: 'assets/images/flags/fi.svg',
+        name: l10n.finnishLanguage,
+      ),
+      (
+        code: 'sv',
+        asset: 'assets/images/flags/se.svg',
+        name: l10n.swedishLanguage,
+      ),
     ];
 
     return Row(

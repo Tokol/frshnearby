@@ -1339,7 +1339,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get landingFormConsentLabel =>
-      'Jag samtycker till att FRSH Nearby Oy får samla in, lagra, bevara och på annat sätt behandla de personuppgifter som jag lämnar via detta formulär för att administrera väntelistan, kontakta mig i samband med lanseringen av FRSH Nearby-appen samt skicka relaterade meddelanden och uppdateringar i enlighet med integritetspolicyn.';
+      'Jag samtycker till att FRSH nearby Oy får samla in, lagra, bevara och på annat sätt behandla de personuppgifter som jag lämnar via detta formulär för att administrera väntelistan, kontakta mig i samband med lanseringen av FRSH nearby-appen samt skicka relaterade meddelanden och uppdateringar i enlighet med integritetspolicyn.';
 
   @override
   String get landingFormThanks =>

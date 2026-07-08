@@ -1337,7 +1337,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get landingFormConsentLabel =>
-      'I agree that FRSH Nearby may collect, store, and process the personal data submitted through this form for the purpose of managing the waiting list, contacting me about the launch of FRSH Nearby, and providing related updates, in accordance with the Privacy Policy.';
+      'I agree that FRSH nearby may collect, store, and process the personal data submitted through this form for the purpose of managing the waiting list, contacting me about the launch of FRSH nearby, and providing related updates, in accordance with the Privacy Policy.';
 
   @override
   String get landingFormThanks =>

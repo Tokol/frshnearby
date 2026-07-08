@@ -2551,7 +2551,7 @@ abstract class AppLocalizations {
   /// No description provided for @landingFormConsentLabel.
   ///
   /// In en, this message translates to:
-  /// **'I agree that FRSH Nearby may collect, store, and process the personal data submitted through this form for the purpose of managing the waiting list, contacting me about the launch of FRSH Nearby, and providing related updates, in accordance with the Privacy Policy.'**
+  /// **'I agree that FRSH nearby may collect, store, and process the personal data submitted through this form for the purpose of managing the waiting list, contacting me about the launch of FRSH nearby, and providing related updates, in accordance with the Privacy Policy.'**
   String get landingFormConsentLabel;
 
   /// No description provided for @landingFormThanks.
