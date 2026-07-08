@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -l pages_artifact.zip)",
+      "Bash(unzip -o pages_artifact.zip)",
+      "Bash(tar -tvf artifact.tar)",
+      "Bash(awk '$1 ~ /^l/ || $NF ~ /[^ -~]/')",
+      "Bash(tar -tf artifact.tar)",
+      "Bash(sort -k3 -n -r)",
+      "Bash(git rm *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python3)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(xargs kill)",
+      "Bash(flutter run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5177)",
+      "Bash(open http://localhost:5177)",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless=new --remote-debugging-port=9333 --window-size=1400,1800 --user-data-dir=/private/tmp/claude-501/-Users-suresh-Development-freshfarm/6a049f7b-4526-406f-8481-8404ddadad04/scratchpad/chrome-profile http://localhost:5177)",
+      "Bash(\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless=new --disable-gpu --no-first-run --no-default-browser-check --remote-debugging-port=9333 --window-size=1400,1800 --user-data-dir=/private/tmp/claude-501/-Users-suresh-Development-freshfarm/6a049f7b-4526-406f-8481-8404ddadad04/scratchpad/chrome-profile about:blank)",
+      "Bash(ssh-add -l)",
+      "Bash(ssh-add --apple-use-keychain ~/.ssh/id_ed25519)",
+      "Bash(file assets/images/logo/*)",
+      "Bash(pkill -f \"flutter run\")",
+      "Bash(:)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}

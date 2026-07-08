@@ -34,6 +34,14 @@ class _MarketingHomeScreenState extends ConsumerState<MarketingHomeScreen> {
   EarlyAccessRole _role = EarlyAccessRole.consumer;
   bool _submitted = false;
 
+  void _syncDefaultCountry(Locale locale) {
+    final localizedDefault = locale.languageCode == 'fi' ? 'Suomi' : 'Finland';
+    final current = _countryController.text;
+    if (current == 'Finland' || current == 'Suomi') {
+      _countryController.text = localizedDefault;
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -75,6 +83,8 @@ class _MarketingHomeScreenState extends ConsumerState<MarketingHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _syncDefaultCountry(Localizations.localeOf(context));
+
     return Scaffold(
       backgroundColor: LandingColors.paper,
       body: SafeArea(

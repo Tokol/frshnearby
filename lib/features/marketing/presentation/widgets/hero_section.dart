@@ -78,43 +78,6 @@ class _HeroSectionState extends State<HeroSection>
           children: [
             _staggered(
               0,
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: LandingColors.line),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.spa_rounded,
-                      size: 16,
-                      color: LandingColors.green,
-                    ),
-                    const SizedBox(width: 7),
-                    Flexible(
-                      child: Text(
-                        l10n.landingHeroKicker,
-                        style: const TextStyle(
-                          color: LandingColors.green,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            _staggered(
-              1,
               Text(
                 l10n.landingHeroTitle,
                 style: TextStyle(
@@ -128,7 +91,7 @@ class _HeroSectionState extends State<HeroSection>
             ),
             const SizedBox(height: 18),
             _staggered(
-              2,
+              1,
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 460),
                 child: Text(
@@ -144,7 +107,7 @@ class _HeroSectionState extends State<HeroSection>
             ),
             const SizedBox(height: 26),
             _staggered(
-              3,
+              2,
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
