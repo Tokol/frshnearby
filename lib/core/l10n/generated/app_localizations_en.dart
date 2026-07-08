@@ -1336,6 +1336,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get landingFormSubmit => 'Join the waiting list';
 
   @override
+  String get landingFormConsentLabel =>
+      'I agree that FRSH Nearby may collect, store, and process the personal data submitted through this form for the purpose of managing the waiting list, contacting me about the launch of FRSH Nearby, and providing related updates, in accordance with the Privacy Policy.';
+
+  @override
   String get landingFormThanks =>
       'Thank you. You\'re on the early access list.';
 

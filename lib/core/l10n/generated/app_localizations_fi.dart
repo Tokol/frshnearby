@@ -1344,6 +1344,10 @@ class AppLocalizationsFi extends AppLocalizations {
   String get landingFormSubmit => 'Liity odotuslistalle!';
 
   @override
+  String get landingFormConsentLabel =>
+      'Hyväksyn, että FRSH Nearby Oy:llä on oikeus kerätä, tallentaa, säilyttää ja muutoin käsitellä tällä lomakkeella antamiani henkilötietoja odotuslistan ylläpitämiseksi, yhteydenottoa varten FRSH Nearby -sovelluksen julkaisun yhteydessä sekä siihen liittyvien tiedotteiden ja päivitysten toimittamiseksi tietosuojaselosteen mukaisesti.';
+
+  @override
   String get landingFormThanks => 'Kiitos! Olet nyt ennakkokäyttäjälistalla.';
 
   @override

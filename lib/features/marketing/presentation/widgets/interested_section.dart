@@ -26,8 +26,10 @@ class InterestedSection extends StatelessWidget {
     required this.phoneController,
     required this.messageController,
     required this.role,
+    required this.consentAccepted,
     required this.submitted,
     required this.onRoleChanged,
+    required this.onConsentChanged,
     required this.onSubmit,
   });
 
@@ -36,8 +38,10 @@ class InterestedSection extends StatelessWidget {
   final TextEditingController phoneController;
   final TextEditingController messageController;
   final EarlyAccessRole role;
+  final bool consentAccepted;
   final bool submitted;
   final ValueChanged<EarlyAccessRole?> onRoleChanged;
+  final ValueChanged<bool?> onConsentChanged;
   final VoidCallback onSubmit;
 
   @override
@@ -70,7 +74,10 @@ class InterestedSection extends StatelessWidget {
           ),
         ),
         child: submitted
-            ? _ThanksCard(key: const ValueKey('thanks'), message: l10n.landingFormThanks)
+            ? _ThanksCard(
+                key: const ValueKey('thanks'),
+                message: l10n.landingFormThanks,
+              )
             : _FormBody(
                 key: const ValueKey('form'),
                 emailController: emailController,
@@ -78,7 +85,9 @@ class InterestedSection extends StatelessWidget {
                 phoneController: phoneController,
                 messageController: messageController,
                 role: role,
+                consentAccepted: consentAccepted,
                 onRoleChanged: onRoleChanged,
+                onConsentChanged: onConsentChanged,
                 onSubmit: onSubmit,
               ),
       ),
@@ -94,7 +103,9 @@ class _FormBody extends StatelessWidget {
     required this.phoneController,
     required this.messageController,
     required this.role,
+    required this.consentAccepted,
     required this.onRoleChanged,
+    required this.onConsentChanged,
     required this.onSubmit,
   });
 
@@ -103,7 +114,9 @@ class _FormBody extends StatelessWidget {
   final TextEditingController phoneController;
   final TextEditingController messageController;
   final EarlyAccessRole role;
+  final bool consentAccepted;
   final ValueChanged<EarlyAccessRole?> onRoleChanged;
+  final ValueChanged<bool?> onConsentChanged;
   final VoidCallback onSubmit;
 
   @override
@@ -202,16 +215,78 @@ class _FormBody extends StatelessWidget {
           maxLines: 5,
           decoration: _inputDecoration(l10n.landingFormMessageLabel),
         ),
+        const SizedBox(height: 16),
+        _ConsentToggle(
+          value: consentAccepted,
+          label: l10n.landingFormConsentLabel,
+          onChanged: onConsentChanged,
+        ),
         const SizedBox(height: 20),
         Align(
           alignment: Alignment.centerLeft,
           child: LandingPrimaryButton(
             label: l10n.landingFormSubmit,
             icon: Icons.arrow_forward_rounded,
-            onPressed: onSubmit,
+            onPressed: consentAccepted ? onSubmit : null,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ConsentToggle extends StatelessWidget {
+  const _ConsentToggle({
+    required this.value,
+    required this.label,
+    required this.onChanged,
+  });
+
+  final bool value;
+  final String label;
+  final ValueChanged<bool?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: Checkbox(
+                value: value,
+                onChanged: onChanged,
+                activeColor: LandingColors.green,
+                side: const BorderSide(color: LandingColors.green, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: LandingColors.muted,
+                    fontSize: 13,
+                    height: 1.45,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -413,6 +413,7 @@
   "landingRoleRestaurant": "Restaurant / Shop",
   "landingRoleSupporter": "Local food supporter",
   "landingFormSubmit": "Join the waiting list",
+  "landingFormConsentLabel": "I agree that FRSH Nearby may collect, store, and process the personal data submitted through this form for the purpose of managing the waiting list, contacting me about the launch of FRSH Nearby, and providing related updates, in accordance with the Privacy Policy.",
   "landingFormThanks": "Thank you. You're on the early access list.",
   "landingFooterTagline": "Find food produced near you.",
   "landingFooterCopyright": "© 2026 FRSH nearby",

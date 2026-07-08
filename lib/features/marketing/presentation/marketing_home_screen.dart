@@ -32,6 +32,7 @@ class _MarketingHomeScreenState extends ConsumerState<MarketingHomeScreen> {
   final _formKey = GlobalKey();
 
   EarlyAccessRole _role = EarlyAccessRole.consumer;
+  bool _consentAccepted = false;
   bool _submitted = false;
 
   void _syncDefaultCountry(Locale locale) {
@@ -53,6 +54,8 @@ class _MarketingHomeScreenState extends ConsumerState<MarketingHomeScreen> {
 
   void _joinEarlyAccess() {
     FocusScope.of(context).unfocus();
+    if (!_consentAccepted) return;
+
     // Fire and forget; the sheet gets English role labels for easy filtering.
     EarlyAccessSubmission.submit(
       email: _emailController.text.trim(),
@@ -123,9 +126,13 @@ class _MarketingHomeScreenState extends ConsumerState<MarketingHomeScreen> {
                             phoneController: _phoneController,
                             messageController: _messageController,
                             role: _role,
+                            consentAccepted: _consentAccepted,
                             submitted: _submitted,
                             onRoleChanged: (value) {
                               if (value != null) setState(() => _role = value);
+                            },
+                            onConsentChanged: (value) {
+                              setState(() => _consentAccepted = value ?? false);
                             },
                             onSubmit: _joinEarlyAccess,
                           ),
