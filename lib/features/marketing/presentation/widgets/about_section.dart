@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../marketing_tokens.dart';
+import 'europe_map_card.dart';
 import 'hover_lift.dart';
 
 /// "About us": mission text plus three value cards.
@@ -30,15 +31,58 @@ class AboutSection extends StatelessWidget {
       ),
     ];
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
+        final story = _AboutStory(
+          title: l10n.landingAboutTitle,
+          body: l10n.landingAboutBody,
+        );
+        const map = _AboutMap();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (isWide)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(flex: 11, child: story),
+                  const SizedBox(width: 42),
+                  Expanded(flex: 8, child: map),
+                ],
+              )
+            else ...[
+              story,
+              const SizedBox(height: 22),
+              map,
+            ],
+            const SizedBox(height: 30),
+            _ValueCards(cards: cards),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AboutStory extends StatelessWidget {
+  const _AboutStory({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeading(title: l10n.landingAboutTitle),
+        _SectionHeading(title: title),
         const SizedBox(height: 18),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),
           child: Text(
-            l10n.landingAboutBody,
+            body,
             style: const TextStyle(
               color: LandingColors.muted,
               fontSize: 16,
@@ -47,34 +91,55 @@ class AboutSection extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 28),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 760) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final card in cards) ...[
-                    card,
-                    const SizedBox(height: 14),
-                  ],
-                ],
-              );
-            }
-            return IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < cards.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 16),
-                    Expanded(child: cards[i]),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
       ],
+    );
+  }
+}
+
+class _AboutMap extends StatelessWidget {
+  const _AboutMap();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.center,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: const EuropeMapCard(),
+      ),
+    );
+  }
+}
+
+class _ValueCards extends StatelessWidget {
+  const _ValueCards({required this.cards});
+
+  final List<Widget> cards;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 760) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final card in cards) ...[card, const SizedBox(height: 14)],
+            ],
+          );
+        }
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < cards.length; i++) ...[
+                if (i > 0) const SizedBox(width: 16),
+                Expanded(child: cards[i]),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }

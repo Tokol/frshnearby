@@ -180,12 +180,7 @@ class _FarmPainter extends CustomPainter {
   Path _hillPath(double w, double h, double baseY, double lift, double shift) {
     return Path()
       ..moveTo(0, h * (baseY + shift * 0.4))
-      ..quadraticBezierTo(
-        w * 0.25,
-        h * (baseY - lift),
-        w * 0.52,
-        h * baseY,
-      )
+      ..quadraticBezierTo(w * 0.25, h * (baseY - lift), w * 0.52, h * baseY)
       ..quadraticBezierTo(
         w * 0.78,
         h * (baseY + lift * 0.9),
@@ -228,23 +223,26 @@ class _FarmPainter extends CustomPainter {
   }
 
   void _paintWindmill(Canvas canvas, double w, double h, double t) {
-    // Sits in the gap between the hero copy and the map card; on narrow
-    // layouts the copy spans full width, so skip it to avoid overlap.
-    if (w < 620) return;
-    final base = Offset(w * 0.545, h * 0.745);
-    final hub = Offset(base.dx, base.dy - h * 0.125);
+    final isNarrow = w < 620;
+    final base = Offset(
+      w * (isNarrow ? 0.68 : 0.545),
+      h * (isNarrow ? 0.86 : 0.745),
+    );
+    final hub = Offset(base.dx, base.dy - h * (isNarrow ? 0.09 : 0.125));
     final paint = Paint()
       ..color = LandingColors.deepGreen
-      ..strokeWidth = math.max(2.5, h * 0.007)
+      ..strokeWidth = math.max(2.2, h * (isNarrow ? 0.005 : 0.007))
       ..strokeCap = StrokeCap.round;
 
     // Tapered tower.
+    final towerHalfWidth = math.max(3.0, w * (isNarrow ? 0.007 : 0.010));
+    final hubHalfWidth = math.max(1.5, w * (isNarrow ? 0.0028 : 0.0035));
     canvas.drawPath(
       Path()
-        ..moveTo(base.dx - w * 0.010, base.dy)
-        ..lineTo(hub.dx - w * 0.0035, hub.dy)
-        ..lineTo(hub.dx + w * 0.0035, hub.dy)
-        ..lineTo(base.dx + w * 0.010, base.dy)
+        ..moveTo(base.dx - towerHalfWidth, base.dy)
+        ..lineTo(hub.dx - hubHalfWidth, hub.dy)
+        ..lineTo(hub.dx + hubHalfWidth, hub.dy)
+        ..lineTo(base.dx + towerHalfWidth, base.dy)
         ..close(),
       Paint()..color = LandingColors.deepGreen,
     );
@@ -252,7 +250,7 @@ class _FarmPainter extends CustomPainter {
     canvas.save();
     canvas.translate(hub.dx, hub.dy);
     canvas.rotate(t * 2 * math.pi * 2); // two turns per loop — slow and calm
-    final bladeLength = h * 0.072;
+    final bladeLength = h * (isNarrow ? 0.052 : 0.072);
     for (var i = 0; i < 3; i++) {
       canvas.rotate(2 * math.pi / 3);
       canvas.drawLine(Offset.zero, Offset(0, -bladeLength), paint);
@@ -267,16 +265,15 @@ class _FarmPainter extends CustomPainter {
   }
 
   void _paintBarn(Canvas canvas, double w, double h) {
-    final cx = w * 0.86;
+    final isNarrow = w < 620;
+    final cx = w * (isNarrow ? 0.86 : 0.86);
     final baseY = h * 0.87;
-    final bw = w * 0.045;
-    final bh = h * 0.05;
+    final unit = math.min(w, h);
+    final bw = unit * (isNarrow ? 0.060 : 0.052);
+    final bh = bw * 0.82;
     final paint = Paint()..color = LandingColors.deepGreen;
 
-    canvas.drawRect(
-      Rect.fromLTWH(cx - bw / 2, baseY - bh, bw, bh),
-      paint,
-    );
+    canvas.drawRect(Rect.fromLTWH(cx - bw / 2, baseY - bh, bw, bh), paint);
     canvas.drawPath(
       Path()
         ..moveTo(cx - bw * 0.62, baseY - bh)
@@ -293,11 +290,12 @@ class _FarmPainter extends CustomPainter {
   }
 
   void _paintWheat(Canvas canvas, double w, double h, double t) {
-    final count = w < 560 ? 10 : stalks.length;
+    final isNarrow = w < 560;
+    final count = isNarrow ? 14 : stalks.length;
     final stroke = Paint()
       ..color = const Color(0xFFE9CD7A)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
+      ..strokeWidth = isNarrow ? 2.1 : 2.4
       ..strokeCap = StrokeCap.round;
     final head = Paint()..color = const Color(0xFFEFD98F);
 
@@ -305,7 +303,7 @@ class _FarmPainter extends CustomPainter {
       final stalk = stalks[i];
       final baseX = stalk.x * w;
       final baseY = h * (0.955 + 0.03 * math.sin(stalk.phase));
-      final length = h * 0.075 * stalk.height;
+      final length = h * (isNarrow ? 0.065 : 0.075) * stalk.height;
       final sway = math.sin(t * 2 * math.pi * 3 + stalk.phase) * length * 0.16;
       final tip = Offset(baseX + sway, baseY - length);
 

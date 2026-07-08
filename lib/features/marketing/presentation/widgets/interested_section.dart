@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../marketing_tokens.dart';
 import 'landing_buttons.dart';
+import 'privacy_policy_dialog.dart';
 
 /// Stable role values so the dropdown survives a mid-session locale switch
 /// (localized display labels are resolved at build time).
@@ -248,6 +249,8 @@ class _ConsentToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final linkLabel = privacyPolicyLinkLabel(context);
+
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () => onChanged(!value),
@@ -273,8 +276,14 @@ class _ConsentToggle extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  label,
+                child: Text.rich(
+                  TextSpan(
+                    children: _consentLabelSpans(
+                      context: context,
+                      label: label,
+                      linkLabel: linkLabel,
+                    ),
+                  ),
                   style: const TextStyle(
                     color: LandingColors.muted,
                     fontSize: 13,
@@ -289,6 +298,49 @@ class _ConsentToggle extends StatelessWidget {
       ),
     );
   }
+}
+
+List<InlineSpan> _consentLabelSpans({
+  required BuildContext context,
+  required String label,
+  required String linkLabel,
+}) {
+  final linkStart = label.toLowerCase().indexOf(linkLabel.toLowerCase());
+  if (linkStart == -1) {
+    return [
+      TextSpan(text: '$label '),
+      _privacyPolicyLinkSpan(context, linkLabel),
+    ];
+  }
+
+  final linkEnd = linkStart + linkLabel.length;
+  return [
+    TextSpan(text: label.substring(0, linkStart)),
+    _privacyPolicyLinkSpan(context, label.substring(linkStart, linkEnd)),
+    TextSpan(text: label.substring(linkEnd)),
+  ];
+}
+
+InlineSpan _privacyPolicyLinkSpan(BuildContext context, String label) {
+  return WidgetSpan(
+    alignment: PlaceholderAlignment.baseline,
+    baseline: TextBaseline.alphabetic,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(4),
+      onTap: () => showPrivacyPolicyDialog(context),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: LandingColors.green,
+          fontSize: 13,
+          height: 1.45,
+          fontWeight: FontWeight.w800,
+          decoration: TextDecoration.underline,
+          decorationColor: LandingColors.green,
+        ),
+      ),
+    ),
+  );
 }
 
 class _ThanksCard extends StatelessWidget {

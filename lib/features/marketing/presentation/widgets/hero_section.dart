@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../marketing_tokens.dart';
-import 'europe_map_card.dart';
 import 'farm_scene.dart';
 import 'landing_buttons.dart';
 
-/// Hero: staggered headline over the animated farm scene, with the Europe map
-/// card floating beside it on wide layouts (or stacked below on narrow ones).
+/// Hero: staggered headline over the animated farm scene.
 class HeroSection extends StatefulWidget {
   const HeroSection({
     super.key,
@@ -71,6 +69,9 @@ class _HeroSectionState extends State<HeroSection>
         final width = constraints.maxWidth;
         final isWide = width >= 1000;
         final isNarrow = width < 720;
+        final headlineWidth = isNarrow
+            ? double.infinity
+            : (isWide ? 760.0 : 680.0);
 
         final copy = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,14 +79,17 @@ class _HeroSectionState extends State<HeroSection>
           children: [
             _staggered(
               0,
-              Text(
-                l10n.landingHeroTitle,
-                style: TextStyle(
-                  color: LandingColors.ink,
-                  fontSize: isNarrow ? 40 : (isWide ? 64 : 52),
-                  fontWeight: FontWeight.w900,
-                  height: 1.0,
-                  letterSpacing: -1,
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: headlineWidth),
+                child: Text(
+                  l10n.landingHeroTitle,
+                  style: TextStyle(
+                    color: LandingColors.ink,
+                    fontSize: isNarrow ? 40 : (isWide ? 58 : 52),
+                    fontWeight: FontWeight.w900,
+                    height: isNarrow ? 1.0 : 1.04,
+                    letterSpacing: -1,
+                  ),
                 ),
               ),
             ),
@@ -131,7 +135,7 @@ class _HeroSectionState extends State<HeroSection>
         final scene = ClipRRect(
           borderRadius: BorderRadius.circular(26),
           child: SizedBox(
-            height: isWide ? 600 : (isNarrow ? 520 : 560),
+            height: isWide ? 560 : (isNarrow ? 500 : 540),
             width: double.infinity,
             child: Stack(
               children: [
@@ -141,44 +145,14 @@ class _HeroSectionState extends State<HeroSection>
                     horizontal: isNarrow ? 24 : 48,
                     vertical: isNarrow ? 32 : 48,
                   ),
-                  child: isWide
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(flex: 11, child: copy),
-                            const SizedBox(width: 36),
-                            Expanded(
-                              flex: 8,
-                              child: _staggered(
-                                2,
-                                const Align(
-                                  alignment: Alignment.topCenter,
-                                  child: EuropeMapCard(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Align(
-                          alignment: Alignment.centerLeft,
-                          child: copy,
-                        ),
+                  child: Align(alignment: Alignment.centerLeft, child: copy),
                 ),
               ],
             ),
           ),
         );
 
-        if (isWide) return scene;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            scene,
-            const SizedBox(height: 20),
-            _staggered(3, const EuropeMapCard()),
-          ],
-        );
+        return scene;
       },
     );
   }
