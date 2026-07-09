@@ -1308,6 +1308,63 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every order keeps value in your region and strengthens local food networks.';
 
   @override
+  String get landingProducersTitle => 'For producers';
+
+  @override
+  String get landingProducer1Title => 'Promote and sell on social media!';
+
+  @override
+  String get landingProducer1Body =>
+      'Copy and paste the link to your personal order page into your social media posts and profiles to direct customers straight to your product catalog.';
+
+  @override
+  String get landingProducer2Title =>
+      'Manage all social media orders in one place!';
+
+  @override
+  String get landingProducer2Body =>
+      'With your order page, you can view and approve incoming orders. Once an order is approved, the customer receives a payment request. The order page also provides summaries of all approved orders by product and by customer, making order management and delivery planning simple.';
+
+  @override
+  String get landingProducer3Title => 'Be visible to everyone!';
+
+  @override
+  String get landingProducer3Body =>
+      'Our interactive map brings all producers together in one place, making it easy for consumers to discover local food producers nearby.';
+
+  @override
+  String get landingProducer4Title => 'Reports and bookkeeping';
+
+  @override
+  String get landingProducer4Body =>
+      'Download sales reports and receipts with ease and send them directly to your accountant.';
+
+  @override
+  String get landingConsumersTitle => 'For consumers';
+
+  @override
+  String get landingConsumer1Title => 'Order local food effortlessly';
+
+  @override
+  String get landingConsumer1Body =>
+      'Find nearby food producers on the app\'s map, or browse the product catalog for exactly what you\'re looking for.';
+
+  @override
+  String get landingConsumer2Title => 'Fresh, healthy, and traceable';
+
+  @override
+  String get landingConsumer2Body =>
+      'By choosing a local producer, you know exactly what you\'re buying, where it comes from, and how the crops and animals have been cared for.';
+
+  @override
+  String get landingConsumer3Title =>
+      'Support sustainable local food production';
+
+  @override
+  String get landingConsumer3Body =>
+      'Buying directly from local producers supports your local economy and reduces the need for food to travel around the world.';
+
+  @override
   String get landingInterestedTitle => 'Interested?';
 
   @override

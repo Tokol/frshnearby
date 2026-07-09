@@ -6,10 +6,12 @@ import '../../../core/router/app_routes.dart';
 import '../data/early_access_submission.dart';
 import 'marketing_tokens.dart';
 import 'widgets/about_section.dart';
+import 'widgets/consumers_section.dart';
 import 'widgets/hero_section.dart';
 import 'widgets/interested_section.dart';
 import 'widgets/landing_footer.dart';
 import 'widgets/landing_top_bar.dart';
+import 'widgets/producers_section.dart';
 import 'widgets/reveal_on_scroll.dart';
 
 /// Animated farm-themed landing page. All copy comes from AppLocalizations,
@@ -112,6 +114,10 @@ class _MarketingHomeScreenState extends ConsumerState<MarketingHomeScreen> {
                           onJoin: () => _scrollTo(_formKey),
                           onPrototype: _openPrototype,
                         ),
+                        const SizedBox(height: 64),
+                        const RevealOnScroll(child: ProducersSection()),
+                        const SizedBox(height: 64),
+                        const RevealOnScroll(child: ConsumersSection()),
                         const SizedBox(height: 64),
                         RevealOnScroll(
                           key: _aboutKey,

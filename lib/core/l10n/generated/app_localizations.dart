@@ -2494,6 +2494,102 @@ abstract class AppLocalizations {
   /// **'Every order keeps value in your region and strengthens local food networks.'**
   String get landingValue3Body;
 
+  /// No description provided for @landingProducersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For producers'**
+  String get landingProducersTitle;
+
+  /// No description provided for @landingProducer1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Promote and sell on social media!'**
+  String get landingProducer1Title;
+
+  /// No description provided for @landingProducer1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy and paste the link to your personal order page into your social media posts and profiles to direct customers straight to your product catalog.'**
+  String get landingProducer1Body;
+
+  /// No description provided for @landingProducer2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage all social media orders in one place!'**
+  String get landingProducer2Title;
+
+  /// No description provided for @landingProducer2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'With your order page, you can view and approve incoming orders. Once an order is approved, the customer receives a payment request. The order page also provides summaries of all approved orders by product and by customer, making order management and delivery planning simple.'**
+  String get landingProducer2Body;
+
+  /// No description provided for @landingProducer3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Be visible to everyone!'**
+  String get landingProducer3Title;
+
+  /// No description provided for @landingProducer3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Our interactive map brings all producers together in one place, making it easy for consumers to discover local food producers nearby.'**
+  String get landingProducer3Body;
+
+  /// No description provided for @landingProducer4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports and bookkeeping'**
+  String get landingProducer4Title;
+
+  /// No description provided for @landingProducer4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Download sales reports and receipts with ease and send them directly to your accountant.'**
+  String get landingProducer4Body;
+
+  /// No description provided for @landingConsumersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For consumers'**
+  String get landingConsumersTitle;
+
+  /// No description provided for @landingConsumer1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Order local food effortlessly'**
+  String get landingConsumer1Title;
+
+  /// No description provided for @landingConsumer1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Find nearby food producers on the app\'s map, or browse the product catalog for exactly what you\'re looking for.'**
+  String get landingConsumer1Body;
+
+  /// No description provided for @landingConsumer2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh, healthy, and traceable'**
+  String get landingConsumer2Title;
+
+  /// No description provided for @landingConsumer2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'By choosing a local producer, you know exactly what you\'re buying, where it comes from, and how the crops and animals have been cared for.'**
+  String get landingConsumer2Body;
+
+  /// No description provided for @landingConsumer3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Support sustainable local food production'**
+  String get landingConsumer3Title;
+
+  /// No description provided for @landingConsumer3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Buying directly from local producers supports your local economy and reduces the need for food to travel around the world.'**
+  String get landingConsumer3Body;
+
   /// No description provided for @landingInterestedTitle.
   ///
   /// In en, this message translates to:

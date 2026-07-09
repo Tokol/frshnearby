@@ -1310,6 +1310,62 @@ class AppLocalizationsSv extends AppLocalizations {
       'Varje beställning behåller värdet i din region och stärker lokala matnätverk.';
 
   @override
+  String get landingProducersTitle => 'För producenter';
+
+  @override
+  String get landingProducer1Title => 'Marknadsför och sälj i sociala medier!';
+
+  @override
+  String get landingProducer1Body =>
+      'Kopiera och klistra in länken till din personliga ordersida i dina inlägg och profiler i sociala medier för att leda kunderna direkt till din produktkatalog.';
+
+  @override
+  String get landingProducer2Title =>
+      'Hantera alla beställningar från sociala medier på ett ställe!';
+
+  @override
+  String get landingProducer2Body =>
+      'På din ordersida kan du se och godkänna inkommande beställningar. När en beställning har godkänts får kunden en betalningsförfrågan. Ordersidan ger också sammanställningar av alla godkända beställningar per produkt och per kund, vilket gör orderhanteringen och leveransplaneringen enkel.';
+
+  @override
+  String get landingProducer3Title => 'Var synlig för alla!';
+
+  @override
+  String get landingProducer3Body =>
+      'Vår interaktiva karta samlar alla producenter på ett och samma ställe, så att konsumenter enkelt kan hitta lokala matproducenter i närheten.';
+
+  @override
+  String get landingProducer4Title => 'Rapporter och bokföring';
+
+  @override
+  String get landingProducer4Body =>
+      'Ladda enkelt ner försäljningsrapporter och kvitton och skicka dem direkt till din bokförare.';
+
+  @override
+  String get landingConsumersTitle => 'För konsumenter';
+
+  @override
+  String get landingConsumer1Title => 'Beställ närproducerad mat utan krångel';
+
+  @override
+  String get landingConsumer1Body =>
+      'Hitta matproducenter nära dig på appens karta eller bläddra i produktkatalogen för att hitta precis det du söker.';
+
+  @override
+  String get landingConsumer2Title => 'Färskt, hälsosamt och spårbart';
+
+  @override
+  String get landingConsumer2Body =>
+      'Genom att välja en lokal producent vet du exakt vad du köper, var det kommer ifrån och hur grödor och djur har tagits om hand.';
+
+  @override
+  String get landingConsumer3Title => 'Stöd hållbar lokal matproduktion';
+
+  @override
+  String get landingConsumer3Body =>
+      'Att köpa direkt från lokala producenter stödjer din lokala ekonomi och minskar behovet av att maten reser jorden runt.';
+
+  @override
   String get landingInterestedTitle => 'Intresserad?';
 
   @override

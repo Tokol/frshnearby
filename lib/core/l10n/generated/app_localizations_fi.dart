@@ -1315,6 +1315,61 @@ class AppLocalizationsFi extends AppLocalizations {
       'Jokainen tilauksesi tukee oman alueesi elinvoimaa ja vahvistaa paikallista ruuantuotantoa.';
 
   @override
+  String get landingProducersTitle => 'Tuottajille';
+
+  @override
+  String get landingProducer1Title => 'Näy ja myy somessa!';
+
+  @override
+  String get landingProducer1Body =>
+      'Kopioi ja liitä henkilökohtaisen tilauskirjasi linkki some-postauksiisi ja some-alustoille ohjataksesi ihmiset suoraan myyntikatalogiisi.';
+
+  @override
+  String get landingProducer2Title => 'Keskitä some-myynnit yhteen paikkaan!';
+
+  @override
+  String get landingProducer2Body =>
+      'Käyttämällä tilauskirjaa näet ja hyväksyt tilauskirjastasi uudet tilaukset. Hyväksymisen jälkeen tilaaja saa maksupyynnön. Tilauskirja sisältää yhteenvedot kaikista hyväksytyistä tilauksista per tuote ja tuotteet per henkilö, mikä auttaa tilausten hallinnassa ja toimitusten suunnittelussa.';
+
+  @override
+  String get landingProducer3Title => 'Näy kaikille!';
+
+  @override
+  String get landingProducer3Body =>
+      'Kartta-ominaisuutemme kerää kaikki tuottajat yhteen karttaan, josta kuluttajat löytävät lähituottajansa helposti.';
+
+  @override
+  String get landingProducer4Title => 'Raportit ja kirjanpito';
+
+  @override
+  String get landingProducer4Body =>
+      'Lataa myyntiraportit ja kuitit helposti ja lähetä ne suoraan kirjanpitäjällesi.';
+
+  @override
+  String get landingConsumersTitle => 'Kuluttajille';
+
+  @override
+  String get landingConsumer1Title => 'Tilaa lähiruokaa vaivattomasti';
+
+  @override
+  String get landingConsumer1Body =>
+      'Löydä lähituottajasi helposti sovelluksen kartasta tai etsi haluamiasi tuotteita katalogista.';
+
+  @override
+  String get landingConsumer2Title => 'Tuoretta, terveellistä ja jäljitettävää';
+
+  @override
+  String get landingConsumer2Body =>
+      'Valitsemalla lähituottajan tiedät varmasti mitä saat, mistä se tulee ja kuinka kasvit ja eläimet on hoidettu.';
+
+  @override
+  String get landingConsumer3Title => 'Suosi kestävää lähituotantoa';
+
+  @override
+  String get landingConsumer3Body =>
+      'Ostamalla suoraan lähituottajalta tuet paikallista, eikä ruuan tarvitse matkustaa ympäri maailmaa.';
+
+  @override
   String get landingInterestedTitle => 'Kiinnostuitko?';
 
   @override
