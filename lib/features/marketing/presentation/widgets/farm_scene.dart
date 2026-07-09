@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../marketing_tokens.dart';
 
-/// Animated illustrated farm backdrop: gradient sky, breathing sun, drifting
-/// clouds, rolling hills with furrow lines, a slowly turning windmill, a barn
-/// silhouette, and golden wheat swaying along the front hill.
+/// Animated illustrated farm backdrop: gradient sky, breathing sun with halo
+/// rings, gliding birds, drifting clouds, rolling hills with furrow lines, a
+/// slowly turning windmill, a barn silhouette, and golden wheat swaying along
+/// the front hill.
 ///
 /// One repeating [AnimationController] drives the whole scene; the painter
 /// listens to it via `repaint`, so there are no rebuilds per frame.
@@ -124,6 +125,7 @@ class _FarmPainter extends CustomPainter {
     );
 
     _paintSun(canvas, w, h, t);
+    _paintBirds(canvas, w, h, t);
     _paintClouds(canvas, w, h, t);
     _paintHills(canvas, w, h);
     _paintWindmill(canvas, w, h, t);
@@ -132,22 +134,61 @@ class _FarmPainter extends CustomPainter {
   }
 
   void _paintSun(Canvas canvas, double w, double h, double t) {
-    final center = Offset(w * 0.45, h * 0.15);
+    final center = Offset(w * 0.62, h * 0.18);
     final breath = 1 + 0.035 * math.sin(t * 2 * math.pi);
     final radius = math.min(w, h) * 0.075 * breath;
 
     canvas.drawCircle(
       center,
-      radius * 2.8,
+      radius * 3.0,
       Paint()
         ..shader = RadialGradient(
           colors: [
-            const Color(0xFFF6DE8D).withValues(alpha: 0.55),
+            const Color(0xFFF6DE8D).withValues(alpha: 0.5),
             const Color(0xFFF6DE8D).withValues(alpha: 0),
           ],
-        ).createShader(Rect.fromCircle(center: center, radius: radius * 2.8)),
+        ).createShader(Rect.fromCircle(center: center, radius: radius * 3.0)),
+    );
+    // Thin halo rings breathing with the sun.
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    canvas.drawCircle(
+      center,
+      radius * 1.6,
+      ring..color = const Color(0xFFE9CD7A).withValues(alpha: 0.5),
+    );
+    canvas.drawCircle(
+      center,
+      radius * 2.2,
+      ring..color = const Color(0xFFE9CD7A).withValues(alpha: 0.25),
     );
     canvas.drawCircle(center, radius, Paint()..color = const Color(0xFFF3CE6B));
+  }
+
+  void _paintBirds(Canvas canvas, double w, double h, double t) {
+    // A few distant birds gliding slowly right to left.
+    final paint = Paint()
+      ..color = const Color(0xFF2C4636).withValues(alpha: 0.35)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round;
+
+    for (var i = 0; i < 3; i++) {
+      final travel = w * 1.3;
+      final x =
+          travel - ((t * 1.4 * travel + i * travel * 0.37) % travel) - w * 0.15;
+      final y = h * (0.10 + i * 0.05) + math.sin(t * 2 * math.pi * 4 + i) * 3;
+      final s = 5.0 + i * 1.5;
+      final flap = 1 + 0.25 * math.sin(t * 2 * math.pi * 10 + i * 2);
+      canvas.drawPath(
+        Path()
+          ..moveTo(x - s, y)
+          ..quadraticBezierTo(x - s * 0.4, y - s * 0.55 * flap, x, y)
+          ..quadraticBezierTo(x + s * 0.4, y - s * 0.55 * flap, x + s, y),
+        paint,
+      );
+    }
   }
 
   void _paintClouds(Canvas canvas, double w, double h, double t) {
