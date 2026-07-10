@@ -437,5 +437,5 @@
   "prototypeChooserSubtitle": "Valitse puoli, jota haluat kokeilla ensin.",
   "prototypeFarmerHint": "Kojelauta, tilaukset, ilmoitukset, tilastot",
   "prototypeConsumerHint": "Lähiruoka, tilaprofiilit, diilit, chat",
-  "landingFormPhoneLabel": "Puhelinnumero"
+  "landingFormPhoneLabel": "Puhelinnumero (valinnainen)"
 }

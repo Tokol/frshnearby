@@ -1260,20 +1260,20 @@ class AppLocalizationsSv extends AppLocalizations {
   String get landingNavPrototype => 'Öppna prototypen';
 
   @override
-  String get landingHeroKicker => 'Från lokal jord till ditt bord';
+  String get landingHeroKicker => 'Producerat nära dig';
 
   @override
-  String get landingHeroTitle => 'Vi gör det enkelt att äta närproducerat.';
+  String get landingHeroTitle => 'Vi gör det lätt att konsumera närproducerat';
 
   @override
   String get landingHeroSubtitle =>
-      'FRSH Nearby kopplar samman dig direkt med lokala matproducenter nära dig — utan mellanhänder, vilket sänker kostnaderna och ökar färskheten.';
+      'FRSH nearby kopplar ihop dig direkt med lokala matproducenter nära dig utan mellanhänder.';
 
   @override
-  String get landingHeroPrimaryCta => 'Få tidig tillgång';
+  String get landingHeroPrimaryCta => 'Gå med i väntelistan';
 
   @override
-  String get landingHeroSecondaryCta => 'Öppna prototypen';
+  String get landingHeroSecondaryCta => 'Testa vår prototyp';
 
   @override
   String get landingMapBadge => 'Lanseras först i Vasa, Finland';
@@ -1286,53 +1286,52 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get landingAboutBody =>
-      'FRSH Nearby började med en enkel idé: den bästa maten odlas granngårds. Vi bygger en plattform som gör det enkelt för konsumenter att få tillgång till närproducerad mat — och som gör det lättare för matproducenter att sälja direkt till konsumenten, utan mellanhänder. Plattformen byggs av tre nyutexaminerade universitetsstudenter, tillsammans med lokala matproducenter. Färskt, enkelt och rättvist.';
+      'Konceptet bakom FRSH nearby började med en österbottnisk tanke: bästa maten produceras vid granngården. Att köpa mat direkt från producenten utan mellanhänder gör det möjligt att njuta av en högkvalitativ produkt till ett pris som är rättvist både för producenten och konsumenten. Plattformen FRSH nearby utvecklas av tre nyutexaminerade universitetsstuderande tillsammans med lokala matproducenter.';
 
   @override
-  String get landingValue1Title => 'Lokalt';
+  String get landingValue1Title => 'Närproducerat';
 
   @override
-  String get landingValue1Body =>
-      'Hitta färsk mat som produceras nära dig, alltid i säsong.';
+  String get landingValue1Body => 'Hitta färska råvaror producerade nära dig';
 
   @override
-  String get landingValue2Title => 'Rättvist för matproducenter';
+  String get landingValue2Title => 'Rättvist för matproducenten';
 
   @override
   String get landingValue2Body =>
-      'Producenter säljer direkt till slutkunder på det smidigaste sätt som överenskommits, vilket ökar producenternas vinst och sänker konsumenternas kostnader.';
+      'Matproducenter säljer direkt till slutkonsumenten enligt överenskommet upplägg, ökar vinsterna för matproducenten och minskar kostnaderna för konsumenten.';
 
   @override
-  String get landingValue3Title => 'Starkare samhällen';
+  String get landingValue3Title => 'Hållbarare matproduktion';
 
   @override
   String get landingValue3Body =>
-      'Varje beställning behåller värdet i din region och stärker lokala matnätverk.';
+      'Varje beställning stöder ditt eget närområde och gör lokal matproduktion möjlig.';
 
   @override
-  String get landingProducersTitle => 'För producenter';
+  String get landingProducersTitle => 'För matproducenter';
 
   @override
-  String get landingProducer1Title => 'Marknadsför och sälj i sociala medier!';
+  String get landingProducer1Title => 'Syns och sälj på sociala medier!';
 
   @override
   String get landingProducer1Body =>
-      'Kopiera och klistra in länken till din personliga ordersida i dina inlägg och profiler i sociala medier för att leda kunderna direkt till din produktkatalog.';
+      'Kopiera och klistra in länken till din personliga beställningssida i dina inlägg och profiler på sociala medier för att leda kunder direkt till din produktkatalog.';
 
   @override
   String get landingProducer2Title =>
-      'Hantera alla beställningar från sociala medier på ett ställe!';
+      'Samla all försäljning från sociala medier på ett ställe!';
 
   @override
   String get landingProducer2Body =>
-      'På din ordersida kan du se och godkänna inkommande beställningar. När en beställning har godkänts får kunden en betalningsförfrågan. Ordersidan ger också sammanställningar av alla godkända beställningar per produkt och per kund, vilket gör orderhanteringen och leveransplaneringen enkel.';
+      'Med din beställningssida kan du se och godkänna nya beställningar. När en beställning har godkänts kan ni ta betalt av kunden på samma sätt som ni alltid gjort tidigare, men även möjligt att smidigt ta betalt via applikationen. Beställningssidan innehåller även sammanställningar över alla godkända beställningar per produkt och per kund, vilket gör det enklare att hantera beställningar och planera leveranser.';
 
   @override
-  String get landingProducer3Title => 'Var synlig för alla!';
+  String get landingProducer3Title => 'Ökad synlighet';
 
   @override
   String get landingProducer3Body =>
-      'Vår interaktiva karta samlar alla producenter på ett och samma ställe, så att konsumenter enkelt kan hitta lokala matproducenter i närheten.';
+      'Vår kartfunktion samlar alla producenter på en och samma karta, vilket gör det enkelt för konsumenter att hitta lokala matproducenter nära dem.';
 
   @override
   String get landingProducer4Title => 'Rapporter och bokföring';
@@ -1345,11 +1344,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get landingConsumersTitle => 'För konsumenter';
 
   @override
-  String get landingConsumer1Title => 'Beställ närproducerad mat utan krångel';
+  String get landingConsumer1Title => 'Beställ lokal mat enkelt';
 
   @override
   String get landingConsumer1Body =>
-      'Hitta matproducenter nära dig på appens karta eller bläddra i produktkatalogen för att hitta precis det du söker.';
+      'Hitta lokala matproducenter på appens karta eller sök efter de produkter du vill ha i produktkatalogen.';
 
   @override
   String get landingConsumer2Title => 'Färskt, hälsosamt och spårbart';
@@ -1359,24 +1358,24 @@ class AppLocalizationsSv extends AppLocalizations {
       'Genom att välja en lokal producent vet du exakt vad du köper, var det kommer ifrån och hur grödor och djur har tagits om hand.';
 
   @override
-  String get landingConsumer3Title => 'Stöd hållbar lokal matproduktion';
+  String get landingConsumer3Title => 'Stöd hållbar lokal livsmedelsproduktion';
 
   @override
   String get landingConsumer3Body =>
-      'Att köpa direkt från lokala producenter stödjer din lokala ekonomi och minskar behovet av att maten reser jorden runt.';
+      'Genom att köpa direkt från lokala producenter stödjer du den lokala ekonomin och minskar behovet av att maten transporteras runt om i världen.';
 
   @override
   String get landingInterestedTitle => 'Intresserad?';
 
   @override
   String get landingInterestedSubtitle =>
-      'Gå med i väntelistan och få ett meddelande när FRSH Nearby lanseras.';
+      'Gå med i väntelistan och bli informerad när FRSH nearby lanseras.';
 
   @override
-  String get landingFormRoleLabel => 'Roll';
+  String get landingFormRoleLabel => 'Jag är';
 
   @override
-  String get landingFormMessageLabel => 'Valfritt meddelande';
+  String get landingFormMessageLabel => 'Vad intresserar dig med plattformen?';
 
   @override
   String get landingRoleConsumer => 'Konsument';
@@ -1385,7 +1384,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get landingRoleFarmer => 'Matproducent';
 
   @override
-  String get landingRoleRestaurant => 'Restaurang / Butik';
+  String get landingRoleRestaurant => 'Restaurang/butik';
 
   @override
   String get landingRoleSupporter => 'Vän av närproducerat';
@@ -1402,7 +1401,7 @@ class AppLocalizationsSv extends AppLocalizations {
       'Tack! Du står nu på listan för tidig tillgång.';
 
   @override
-  String get landingFooterTagline => 'Hitta mat som produceras nära dig.';
+  String get landingFooterTagline => 'Hitta dina närproducenter';
 
   @override
   String get landingFooterCopyright => '© 2026 FRSH nearby';

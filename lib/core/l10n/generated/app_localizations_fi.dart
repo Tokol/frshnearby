@@ -1426,5 +1426,5 @@ class AppLocalizationsFi extends AppLocalizations {
   String get prototypeConsumerHint => 'Lähiruoka, tilaprofiilit, diilit, chat';
 
   @override
-  String get landingFormPhoneLabel => 'Puhelinnumero';
+  String get landingFormPhoneLabel => 'Puhelinnumero (valinnainen)';
 }
