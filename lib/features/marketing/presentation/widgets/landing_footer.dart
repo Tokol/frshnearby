@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/l10n/generated/app_localizations.dart';
 import '../marketing_tokens.dart';
 
-const _contactEmail = 'info@freshnearby.com';
+const _contactEmail = 'info@frshnearby.com';
 
 class LandingFooter extends StatelessWidget {
   const LandingFooter({super.key});
