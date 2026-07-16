@@ -2,6 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorageService {
   static const _authTokenKey = 'auth_token';
+  static const _refreshTokenKey = 'refresh_token';
+  static const _emailVerificationKey = 'email_verification';
   static const _selectedLanguageKey = 'selected_language';
   static const _selectedLocationKey = 'selected_location';
 
@@ -19,6 +21,26 @@ class LocalStorageService {
 
   Future<void> clearAuthToken() async {
     await _prefs.remove(_authTokenKey);
+  }
+
+  String? getRefreshToken() => _prefs.getString(_refreshTokenKey);
+
+  Future<void> saveRefreshToken(String token) async {
+    await _prefs.setString(_refreshTokenKey, token);
+  }
+
+  Future<void> clearRefreshToken() async {
+    await _prefs.remove(_refreshTokenKey);
+  }
+
+  String? getEmailVerificationJson() => _prefs.getString(_emailVerificationKey);
+
+  Future<void> saveEmailVerificationJson(String verificationJson) async {
+    await _prefs.setString(_emailVerificationKey, verificationJson);
+  }
+
+  Future<void> clearEmailVerification() async {
+    await _prefs.remove(_emailVerificationKey);
   }
 
   String? getSelectedLanguageCode() => _prefs.getString(_selectedLanguageKey);

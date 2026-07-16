@@ -6,6 +6,7 @@ class AppRoutes {
   static const prototype = '/prototype';
   static const login = '/login';
   static const register = '/register';
+  static const verifyEmail = '/verify-email';
   static const customerHome = '/customer/home';
   static const customerMap = '/customer/map';
   static const customerSearch = '/customer/search';

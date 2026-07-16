@@ -15,24 +15,42 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
 );
 
 class AuthState {
-  const AuthState({this.user, this.isRestoring = true, this.isLoading = false});
+  const AuthState({
+    this.user,
+    this.emailVerification,
+    this.errorMessage,
+    this.isRestoring = true,
+    this.isLoading = false,
+  });
 
   final User? user;
+  final EmailVerificationChallenge? emailVerification;
+  final String? errorMessage;
   final bool isRestoring;
   final bool isLoading;
 
   bool get isSignedIn => user != null;
+  bool get hasPendingEmailVerification => emailVerification != null;
   bool get canAccessFarmerMode => user?.canAccessFarmerMode ?? false;
   bool get canApplyAsFarmer => user?.canApplyAsFarmer ?? false;
 
   AuthState copyWith({
     User? user,
+    EmailVerificationChallenge? emailVerification,
+    bool clearEmailVerification = false,
+    String? errorMessage,
+    bool clearError = false,
     bool clearUser = false,
     bool? isRestoring,
     bool? isLoading,
   }) {
     return AuthState(
       user: clearUser ? null : user ?? this.user,
+      emailVerification:
+          clearEmailVerification
+              ? null
+              : emailVerification ?? this.emailVerification,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
       isRestoring: isRestoring ?? this.isRestoring,
       isLoading: isLoading ?? this.isLoading,
     );
@@ -46,7 +64,12 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> restoreSession() async {
     final user = await _authRepository.restoreSession();
-    state = state.copyWith(user: user, isRestoring: false);
+    final emailVerification = await _authRepository.restoreEmailVerification();
+    state = state.copyWith(
+      user: user,
+      emailVerification: emailVerification,
+      isRestoring: false,
+    );
   }
 
   Future<void> login({required String email, required String password}) async {
@@ -112,14 +135,60 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(user: user);
   }
 
-  Future<void> _runAuthAction(Future<User> Function() action) async {
-    state = state.copyWith(isLoading: true);
+  Future<void> verifyEmailCode(String code) async {
+    final verification = state.emailVerification;
+    if (verification == null) {
+      return;
+    }
+    await _runAuthAction(
+      () => _authRepository.verifyEmailCode(
+        email: verification.email,
+        code: code,
+      ),
+    );
+  }
+
+  Future<void> resendEmailVerificationCode() async {
+    final verification = state.emailVerification;
+    if (verification == null) {
+      return;
+    }
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final user = await action();
-      state = state.copyWith(user: user, isLoading: false);
-    } catch (_) {
-      state = state.copyWith(isLoading: false);
-      rethrow;
+      final updatedVerification = await _authRepository
+          .resendEmailVerificationCode(email: verification.email);
+      state = state.copyWith(
+        emailVerification: updatedVerification,
+        isLoading: false,
+      );
+    } catch (error) {
+      state = state.copyWith(errorMessage: '$error', isLoading: false);
+    }
+  }
+
+  void clearError() {
+    state = state.copyWith(clearError: true);
+  }
+
+  Future<void> _runAuthAction(Future<AuthResult> Function() action) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final result = await action();
+      if (result.isSignedIn) {
+        state = state.copyWith(
+          user: result.user,
+          clearEmailVerification: true,
+          isLoading: false,
+        );
+        return;
+      }
+      state = state.copyWith(
+        clearUser: true,
+        emailVerification: result.emailVerification,
+        isLoading: false,
+      );
+    } catch (error) {
+      state = state.copyWith(errorMessage: '$error', isLoading: false);
     }
   }
 }

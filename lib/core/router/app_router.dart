@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../location/marketplace_location_controller.dart';
 import '../../features/auth/presentation/auth_controller.dart';
 import '../../features/auth/domain/farmer_profile.dart';
+import '../../features/auth/presentation/email_verification_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/customer/presentation/customer_deals_screen.dart';
@@ -48,7 +49,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final location = state.matchedLocation;
       final isAuthRoute =
-          location == AppRoutes.login || location == AppRoutes.register;
+          location == AppRoutes.login ||
+          location == AppRoutes.register ||
+          location == AppRoutes.verifyEmail;
       final isPublicRoute = location == AppRoutes.home;
       final isFarmerRoute = location.startsWith('/farmer/');
       final isApplicationRoute = location.startsWith('/farmer-application');
@@ -64,7 +67,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (!authState.isSignedIn) {
-        return isAuthRoute ? AppRoutes.customerHome : null;
+        if (authState.hasPendingEmailVerification &&
+            (location == AppRoutes.login || location == AppRoutes.register)) {
+          return AppRoutes.verifyEmail;
+        }
+        return isAuthRoute ? null : AppRoutes.login;
       }
 
       if (isAuthRoute || location == AppRoutes.splash) {
@@ -110,6 +117,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.verifyEmail,
+        builder: (context, state) => const EmailVerificationScreen(),
       ),
       GoRoute(
         path: AppRoutes.applyAsFarmer,
@@ -162,25 +173,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.customerSearch,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const CustomerSearchScreen(),
-          transitionDuration: const Duration(milliseconds: 260),
-          reverseTransitionDuration: const Duration(milliseconds: 200),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            final curved = CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            );
-            return FadeTransition(
-              opacity: curved,
-              child: ScaleTransition(
-                scale: Tween<double>(begin: 0.94, end: 1.0).animate(curved),
-                child: child,
-              ),
-            );
-          },
-        ),
+        pageBuilder:
+            (context, state) => CustomTransitionPage(
+              key: state.pageKey,
+              child: const CustomerSearchScreen(),
+              transitionDuration: const Duration(milliseconds: 260),
+              reverseTransitionDuration: const Duration(milliseconds: 200),
+              transitionsBuilder: (
+                context,
+                animation,
+                secondaryAnimation,
+                child,
+              ) {
+                final curved = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                );
+                return FadeTransition(
+                  opacity: curved,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.94, end: 1.0).animate(curved),
+                    child: child,
+                  ),
+                );
+              },
+            ),
       ),
       GoRoute(
         path: AppRoutes.customerMessages,
@@ -214,13 +231,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.customerCommunity,
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: SocialFeedScreen(
-                    viewerType: FeedActorType.consumer,
-                    focusPostId: state.uri.queryParameters['post'],
-                    focusCommentId: state.uri.queryParameters['comment'],
-                  ),
-                ),
+                pageBuilder:
+                    (context, state) => NoTransitionPage(
+                      child: SocialFeedScreen(
+                        viewerType: FeedActorType.consumer,
+                        focusPostId: state.uri.queryParameters['post'],
+                        focusCommentId: state.uri.queryParameters['comment'],
+                      ),
+                    ),
               ),
             ],
           ),
@@ -249,10 +267,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => AppShell(
-          navigationShell: navigationShell,
-          mode: AppShellMode.farmer,
-        ),
+        builder:
+            (context, state, navigationShell) => AppShell(
+              navigationShell: navigationShell,
+              mode: AppShellMode.farmer,
+            ),
         branches: [
           StatefulShellBranch(
             routes: [
@@ -282,12 +301,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.farmerCommunity,
-        builder: (context, state) => SocialFeedScreen(
-          viewerType: FeedActorType.farmer,
-          openComposer: state.uri.queryParameters['create'] == 'true',
-          focusPostId: state.uri.queryParameters['post'],
-          focusCommentId: state.uri.queryParameters['comment'],
-        ),
+        builder:
+            (context, state) => SocialFeedScreen(
+              viewerType: FeedActorType.farmer,
+              openComposer: state.uri.queryParameters['create'] == 'true',
+              focusPostId: state.uri.queryParameters['post'],
+              focusCommentId: state.uri.queryParameters['comment'],
+            ),
       ),
       GoRoute(
         path: AppRoutes.createListing,
@@ -307,18 +327,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/farmer/listings/:listingId/edit',
-        builder: (context, state) =>
-            EditListingScreen(listingId: state.pathParameters['listingId']!),
+        builder:
+            (context, state) => EditListingScreen(
+              listingId: state.pathParameters['listingId']!,
+            ),
       ),
       GoRoute(
         path: '/farmer/listings/:listingId/preview',
-        builder: (context, state) =>
-            ListingPreviewScreen(listingId: state.pathParameters['listingId']!),
+        builder:
+            (context, state) => ListingPreviewScreen(
+              listingId: state.pathParameters['listingId']!,
+            ),
       ),
       GoRoute(
         path: '/farmer/orders/:orderId',
-        builder: (context, state) =>
-            FarmerOrderDetailScreen(orderId: state.pathParameters['orderId']!),
+        builder:
+            (context, state) => FarmerOrderDetailScreen(
+              orderId: state.pathParameters['orderId']!,
+            ),
       ),
       GoRoute(
         path: AppRoutes.farmerMessages,

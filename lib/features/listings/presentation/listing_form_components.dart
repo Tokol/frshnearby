@@ -91,7 +91,7 @@ class _SellingUnitFieldState extends State<SellingUnitField> {
     return Column(
       children: [
         DropdownButtonFormField<String>(
-          initialValue: selectedValue,
+          value: selectedValue,
           decoration: InputDecoration(
             labelText: l10n.sellingUnitLabel,
             prefixIcon: const Icon(Icons.scale_outlined),
@@ -198,9 +198,10 @@ class HarvestDateField extends StatelessWidget {
     return TextFormField(
       readOnly: true,
       controller: TextEditingController(
-        text: value == null
-            ? ''
-            : MaterialLocalizations.of(context).formatMediumDate(value!),
+        text:
+            value == null
+                ? ''
+                : MaterialLocalizations.of(context).formatMediumDate(value!),
       ),
       onTap: () async {
         final now = DateTime.now();
@@ -217,13 +218,14 @@ class HarvestDateField extends StatelessWidget {
         labelText: label,
         hintText: l10n.selectDateHint,
         prefixIcon: const Icon(Icons.calendar_today_outlined),
-        suffixIcon: value == null
-            ? null
-            : IconButton(
-                tooltip: l10n.clearDateTooltip,
-                onPressed: () => onChanged(null),
-                icon: const Icon(Icons.close_rounded),
-              ),
+        suffixIcon:
+            value == null
+                ? null
+                : IconButton(
+                  tooltip: l10n.clearDateTooltip,
+                  onPressed: () => onChanged(null),
+                  icon: const Icon(Icons.close_rounded),
+                ),
       ),
     );
   }

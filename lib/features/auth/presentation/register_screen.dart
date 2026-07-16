@@ -21,12 +21,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -73,24 +75,54 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       label: l10n.passwordLabel,
                       controller: _passwordController,
                       obscureText: true,
-                      textInputAction: TextInputAction.done,
-                      validator: (value) => AppValidators.required(l10n, value),
+                      textInputAction: TextInputAction.next,
+                      validator: (value) => AppValidators.password(l10n, value),
                     ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Confirm password',
+                      controller: _confirmPasswordController,
+                      obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      validator:
+                          (value) => AppValidators.confirmPassword(
+                            l10n,
+                            value,
+                            _passwordController.text,
+                          ),
+                    ),
+                    if (authState.errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        authState.errorMessage!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     AppButton(
                       label: l10n.registerButton,
                       isLoading: authState.isLoading,
-                      onPressed: () {
+                      onPressed: () async {
                         if (!_formKey.currentState!.validate()) {
                           return;
                         }
-                        ref
+                        await ref
                             .read(authControllerProvider.notifier)
                             .register(
                               name: _nameController.text,
                               email: _emailController.text,
                               password: _passwordController.text,
                             );
+                        if (!context.mounted) {
+                          return;
+                        }
+                        if (ref
+                            .read(authControllerProvider)
+                            .hasPendingEmailVerification) {
+                          context.go(AppRoutes.verifyEmail);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),

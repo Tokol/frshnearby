@@ -14,7 +14,7 @@ Future<void> main() async {
   await localStorageService.init();
 
   final apiClient = ApiClient();
-  final authRepository = MockAuthRepository(
+  final authRepository = BackendAuthRepository(
     localStorageService: localStorageService,
     apiClient: apiClient,
   );

@@ -7,6 +7,7 @@ class User {
     required this.email,
     required this.name,
     required this.customerProfile,
+    this.emailVerified = false,
     this.farmerProfile,
   });
 
@@ -14,6 +15,7 @@ class User {
   final String email;
   final String name;
   final CustomerProfile customerProfile;
+  final bool emailVerified;
   final FarmerProfile? farmerProfile;
 
   bool get canAccessFarmerMode => farmerProfile?.canAccessFarmerMode ?? false;
@@ -27,6 +29,7 @@ class User {
     String? email,
     String? name,
     CustomerProfile? customerProfile,
+    bool? emailVerified,
     FarmerProfile? farmerProfile,
   }) {
     return User(
@@ -34,6 +37,7 @@ class User {
       email: email ?? this.email,
       name: name ?? this.name,
       customerProfile: customerProfile ?? this.customerProfile,
+      emailVerified: emailVerified ?? this.emailVerified,
       farmerProfile: farmerProfile ?? this.farmerProfile,
     );
   }

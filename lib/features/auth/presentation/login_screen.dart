@@ -71,16 +71,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     AppButton(
                       label: l10n.loginButton,
                       isLoading: authState.isLoading,
-                      onPressed: () {
+                      onPressed: () async {
                         if (!_formKey.currentState!.validate()) {
                           return;
                         }
-                        ref
+                        await ref
                             .read(authControllerProvider.notifier)
                             .login(
                               email: _emailController.text,
                               password: _passwordController.text,
                             );
+                        if (!context.mounted) {
+                          return;
+                        }
+                        if (ref
+                            .read(authControllerProvider)
+                            .hasPendingEmailVerification) {
+                          context.go(AppRoutes.verifyEmail);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),

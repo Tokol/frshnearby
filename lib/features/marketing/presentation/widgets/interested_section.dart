@@ -66,31 +66,33 @@ class InterestedSection extends StatelessWidget {
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 350),
         switchInCurve: Curves.easeOutCubic,
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: SizeTransition(
-            sizeFactor: animation,
-            axisAlignment: -1,
-            child: child,
-          ),
-        ),
-        child: submitted
-            ? _ThanksCard(
-                key: const ValueKey('thanks'),
-                message: l10n.landingFormThanks,
-              )
-            : _FormBody(
-                key: const ValueKey('form'),
-                emailController: emailController,
-                countryController: countryController,
-                phoneController: phoneController,
-                messageController: messageController,
-                role: role,
-                consentAccepted: consentAccepted,
-                onRoleChanged: onRoleChanged,
-                onConsentChanged: onConsentChanged,
-                onSubmit: onSubmit,
+        transitionBuilder:
+            (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SizeTransition(
+                sizeFactor: animation,
+                axisAlignment: -1,
+                child: child,
               ),
+            ),
+        child:
+            submitted
+                ? _ThanksCard(
+                  key: const ValueKey('thanks'),
+                  message: l10n.landingFormThanks,
+                )
+                : _FormBody(
+                  key: const ValueKey('form'),
+                  emailController: emailController,
+                  countryController: countryController,
+                  phoneController: phoneController,
+                  messageController: messageController,
+                  role: role,
+                  consentAccepted: consentAccepted,
+                  onRoleChanged: onRoleChanged,
+                  onConsentChanged: onConsentChanged,
+                  onSubmit: onSubmit,
+                ),
       ),
     );
   }
@@ -130,7 +132,7 @@ class _FormBody extends StatelessWidget {
       decoration: _inputDecoration(l10n.emailLabel),
     );
     final roleField = DropdownButtonFormField<EarlyAccessRole>(
-      initialValue: role,
+      value: role,
       items: [
         for (final value in EarlyAccessRole.values)
           DropdownMenuItem(value: value, child: Text(value.label(l10n))),

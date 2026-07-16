@@ -15,11 +15,16 @@ void main() {
       localStorageService: storage,
       apiClient: ApiClient(),
     );
-    final user = await repository.register(
+    await repository.register(
       name: 'Applicant',
       email: 'applicant@example.com',
-      password: 'password',
+      password: 'Password!',
     );
+    final authResult = await repository.verifyEmailCode(
+      email: 'applicant@example.com',
+      code: '123456',
+    );
+    final user = authResult.user!;
 
     final updatedUser = await repository.applyAsFarmer(
       user: user,
