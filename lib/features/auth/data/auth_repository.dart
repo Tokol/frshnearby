@@ -82,7 +82,9 @@ class BackendAuthRepository implements AuthRepository {
     Dio? firebaseDio,
   }) : _localStorageService = localStorageService,
        _apiClient = apiClient,
-       _firebaseDio = firebaseDio ?? Dio();
+       _firebaseDio = firebaseDio ?? Dio() {
+    _apiClient.setRefreshAuthTokenHandler(refreshAuthToken);
+  }
 
   final LocalStorageService _localStorageService;
   final ApiClient _apiClient;
@@ -250,6 +252,20 @@ class BackendAuthRepository implements AuthRepository {
     _apiClient.setAuthToken(null);
   }
 
+  Future<String?> refreshAuthToken() async {
+    final refreshToken = _localStorageService.getRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      await signOut();
+      return null;
+    }
+    try {
+      return await _refreshIdToken(refreshToken);
+    } catch (_) {
+      await signOut();
+      return null;
+    }
+  }
+
   Future<EmailVerificationChallenge> _requestEmailSignup({
     required String email,
     required String password,
@@ -298,9 +314,9 @@ class BackendAuthRepository implements AuthRepository {
     String query, {
     Map<String, dynamic>? variables,
   }) async {
-    final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '',
-      data: {'query': query, if (variables != null) 'variables': variables},
+    final response = await _apiClient.postGraphQL<Map<String, dynamic>>(
+      query,
+      variables: variables,
     );
     final body = response.data;
     if (body == null) {
