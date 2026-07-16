@@ -39,7 +39,9 @@ Firebase ID tokens are short-lived. Flutter stores:
 - `auth_token`: current Firebase ID token.
 - `refresh_token`: Firebase refresh token.
 
-When an API request returns `401`, `ApiClient` asks the auth repository to refresh the ID token, updates the `Authorization` header, and retries the request once.
+Before an authenticated API request, `ApiClient` checks whether the `Authorization` header is missing. If it is missing and a refresh token exists, Flutter refreshes the ID token before sending the request.
+
+When an API request returns `401`, or GraphQL returns an unauthenticated error, `ApiClient` asks the auth repository to refresh the ID token, updates the `Authorization` header, and retries the request once.
 
 If refresh fails, Flutter clears the local auth tokens and the user must sign in again.
 
