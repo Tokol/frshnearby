@@ -52,7 +52,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == AppRoutes.login ||
           location == AppRoutes.register ||
           location == AppRoutes.verifyEmail;
-      final isPublicRoute = location == AppRoutes.home;
+      final isPublicRoute =
+          location == AppRoutes.home || location == AppRoutes.prototype;
       final isFarmerRoute = location.startsWith('/farmer/');
       final isApplicationRoute = location.startsWith('/farmer-application');
       final farmerStatus = authState.user?.farmerProfile?.status;

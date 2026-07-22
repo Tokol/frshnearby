@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/generated/app_localizations.dart';
 import '../../../core/router/app_routes.dart';
+import '../../auth/presentation/auth_controller.dart';
 import 'marketing_tokens.dart';
 
-class PrototypeHomeScreen extends StatelessWidget {
+class PrototypeHomeScreen extends ConsumerWidget {
   const PrototypeHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= 860;
 
@@ -21,32 +23,51 @@ class PrototypeHomeScreen extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 1120),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-              child: isWide
-                  ? Row(
-                      children: [
-                        Expanded(
-                          flex: 11,
-                          child: _RolePanel(
-                            onFarmer: () =>
-                                context.go(AppRoutes.farmerDashboard),
-                            onConsumer: () =>
-                                context.go(AppRoutes.customerHome),
+              child:
+                  isWide
+                      ? Row(
+                        children: [
+                          Expanded(
+                            flex: 11,
+                            child: _RolePanel(
+                              onFarmer: () {
+                                ref
+                                    .read(authControllerProvider.notifier)
+                                    .enterFarmerPrototype();
+                                context.go(AppRoutes.farmerDashboard);
+                              },
+                              onConsumer: () {
+                                ref
+                                    .read(authControllerProvider.notifier)
+                                    .enterCustomerPrototype();
+                                context.go(AppRoutes.customerHome);
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 22),
-                        const Expanded(flex: 10, child: _PreviewPanel()),
-                      ],
-                    )
-                  : ListView(
-                      children: [
-                        _RolePanel(
-                          onFarmer: () => context.go(AppRoutes.farmerDashboard),
-                          onConsumer: () => context.go(AppRoutes.customerHome),
-                        ),
-                        const SizedBox(height: 18),
-                        const _PreviewPanel(),
-                      ],
-                    ),
+                          const SizedBox(width: 22),
+                          const Expanded(flex: 10, child: _PreviewPanel()),
+                        ],
+                      )
+                      : ListView(
+                        children: [
+                          _RolePanel(
+                            onFarmer: () {
+                              ref
+                                  .read(authControllerProvider.notifier)
+                                  .enterFarmerPrototype();
+                              context.go(AppRoutes.farmerDashboard);
+                            },
+                            onConsumer: () {
+                              ref
+                                  .read(authControllerProvider.notifier)
+                                  .enterCustomerPrototype();
+                              context.go(AppRoutes.customerHome);
+                            },
+                          ),
+                          const SizedBox(height: 18),
+                          const _PreviewPanel(),
+                        ],
+                      ),
             ),
           ),
         ),

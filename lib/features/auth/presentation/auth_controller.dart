@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/app_providers.dart';
 import '../data/auth_repository.dart';
+import '../domain/customer_profile.dart';
 import '../domain/farmer_profile.dart';
 import '../domain/user.dart';
 import '../../farmer_application/domain/farmer_application.dart';
@@ -61,10 +62,68 @@ class AuthController extends StateNotifier<AuthState> {
   AuthController(this._authRepository) : super(const AuthState());
 
   final AuthRepository _authRepository;
+  bool _isPrototypeSession = false;
+
+  void enterCustomerPrototype() {
+    _isPrototypeSession = true;
+    state = state.copyWith(
+      user: const User(
+        id: 'user-prototype-customer',
+        email: 'prototype@frshnearby.local',
+        name: 'Prototype customer',
+        customerProfile: CustomerProfile(
+          id: 'customer-prototype',
+          displayName: 'Prototype customer',
+        ),
+      ),
+      clearEmailVerification: true,
+      clearError: true,
+      isRestoring: false,
+    );
+  }
+
+  void enterFarmerPrototype() {
+    _isPrototypeSession = true;
+    state = state.copyWith(
+      user: const User(
+        id: 'user-prototype-farmer',
+        email: 'farmer@frshnearby.local',
+        name: 'North Field Farm',
+        customerProfile: CustomerProfile(
+          id: 'customer-prototype-farmer',
+          displayName: 'North Field Farm',
+        ),
+        farmerProfile: FarmerProfile(
+          id: 'farmer-1',
+          farmName: 'North Field Farm',
+          status: FarmerVerificationStatus.verified,
+          profileType: FarmerProfileType.farm,
+          displayName: 'North Field Farm',
+          phone: '+358 40 123 4567',
+          email: 'farmer@example.com',
+          shortDescription: 'Verified local producer.',
+          latitude: 63.0951,
+          longitude: 21.6165,
+          city: 'Vaasa',
+          country: 'Finland',
+          coverPhotoPlaceholder: 'assets/images/home/hero_market.png',
+          pickupNote: 'Farm gate pickup after the order is confirmed.',
+        ),
+      ),
+      clearEmailVerification: true,
+      clearError: true,
+      isRestoring: false,
+    );
+  }
 
   Future<void> restoreSession() async {
     final user = await _authRepository.restoreSession();
     final emailVerification = await _authRepository.restoreEmailVerification();
+    // A slow backend restore must not replace a prototype identity selected
+    // while the public prototype chooser was already visible.
+    if (_isPrototypeSession) {
+      return;
+    }
     state = state.copyWith(
       user: user,
       emailVerification: emailVerification,
@@ -130,6 +189,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
+    _isPrototypeSession = false;
     await _authRepository.signOut();
     final user = await _authRepository.restoreSession();
     state = state.copyWith(user: user);
