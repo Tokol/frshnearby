@@ -64,24 +64,6 @@ class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
   bool _isPrototypeSession = false;
 
-  void enterCustomerPrototype() {
-    _isPrototypeSession = true;
-    state = state.copyWith(
-      user: const User(
-        id: 'user-prototype-customer',
-        email: 'prototype@frshnearby.local',
-        name: 'Prototype customer',
-        customerProfile: CustomerProfile(
-          id: 'customer-prototype',
-          displayName: 'Prototype customer',
-        ),
-      ),
-      clearEmailVerification: true,
-      clearError: true,
-      isRestoring: false,
-    );
-  }
-
   void enterFarmerPrototype() {
     _isPrototypeSession = true;
     state = state.copyWith(
